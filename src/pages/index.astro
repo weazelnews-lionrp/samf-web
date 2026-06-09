@@ -1,0 +1,61 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Hero from '@components/Hero.astro'
+import { CalendarDays, ClipboardList, IdCard, Medal, FileText } from '@lucide/astro/icons'
+
+const shotcuts = [
+	{
+		icon: CalendarDays,
+		label: 'Calendario',
+		sublabel: 'de Competiciones',
+		href: '/competitions',
+	},
+	{
+		icon: ClipboardList,
+		label: 'Resultados',
+		sublabel: 'y Clasificaciones',
+		href: '/clasification',
+	},
+	{
+		icon: IdCard,
+		label: 'Servicios',
+		sublabel: 'y Licencias',
+		href: '/services',
+	},
+	{
+		icon: Medal,
+		label: 'Normativa',
+		sublabel: 'y Reglamentos',
+		href: '/rules',
+	},
+	{
+		icon: FileText,
+		label: 'Inscripciones',
+		sublabel: 'y Solicitudes',
+		href: '/services/inscription',
+	},
+]
+---
+
+<Layout title="San Andreas Motorsports Federation">
+	<Hero />
+	<section class="bg-slate-normal mx-auto grid w-full grid-cols-3 gap-0 md:grid-cols-5">
+		{
+			shotcuts.map((shotcut) => (
+				<a
+					href={shotcut.href}
+					class="group flex flex-row items-center justify-center gap-8 border-2 border-r-0 border-white/30 p-4 tracking-[0.08em] uppercase last:border-r-2">
+					<shotcut.icon
+						size={50}
+						stroke-width={1}
+						class="transition-transform duration-200 group-hover:scale-110"
+					/>
+					<div class="font-racing flex flex-col transition-transform duration-200 group-hover:translate-x-2 group-hover:scale-110">
+						<p class="font-bold">{shotcut.label}</p>
+						<p class="text-white/80">{shotcut.sublabel}</p>
+					</div>
+				</a>
+			))
+		}
+	</section>
+</Layout>

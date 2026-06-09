@@ -1,0 +1,192 @@
+---
+import { SITE_CONFIG, ASSETS } from '@/constants/Site'
+import { NAVIGATION_LINKS } from '@/constants/Navigation'
+import CircleUserRound from '@lucide/astro/icons/circle-user-round'
+---
+
+<header class="fixed top-0 left-0 right-0 h-30 md:h-26 z-50 bg-slate-dark/90 backdrop-blur-md border-b border-slate-border flex items-center transition-colors duration-200 font-racing tracking-[0.08em]">
+	<div class="mx-auto w-full flex items-center justify-between px-4 md:px-8">
+        <!-- Logo Section -->
+        <a class="flex items-center gap-1 p-1 rounded-lg focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:outline-none transition-all duration-200 shrink-0" href="/">
+            <img class="h-20 w-auto rounded-lg object-contain" src={ASSETS.logo} alt={`Logo del ${SITE_CONFIG.shortName}`} />
+            <p class="text-xs text-white/70 italic tracking-wider">San Andreas<br/>Motorsports<br>Federation</p>
+        </a>
+
+        <!-- Desktop Navigation (Hidden on mobile) -->
+        <nav class="hidden md:flex justify-between gap-2 lg:gap-4">
+            {NAVIGATION_LINKS.map((link) => (
+                !link.children ? (
+                    <a 
+                        href={link.href} 
+                        class="text-text-secondary hover:text-white transition-colors duration-200 text-sm font-medium focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:outline-none rounded px-3 py-1.5"
+                    >
+                        {link.label}
+                    </a>
+                ) : (
+                    <div class="relative group">
+                        <button 
+                            class="flex items-center gap-1 text-text-secondary group-hover:text-white transition-colors duration-200 text-sm font-medium focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:outline-none rounded px-3 py-1.5 cursor-pointer"
+                            aria-expanded="false"
+                        >
+                            <span>{link.label}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180 text-text-muted group-hover:text-white">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="absolute left-1/2 -translate-x-1/2 top-full pt-2 w-48 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 ease-out z-50">
+                            <div class="bg-slate-dark border border-slate-border rounded-lg shadow-xl py-2 flex flex-col min-w-max">
+                                {link.children.map((child) => (
+                                    <a 
+                                        href={child.href} 
+                                        class="px-4 py-2 text-sm text-text-muted hover:text-white hover:bg-slate-gray transition-colors duration-150 focus-visible:bg-slate-gray focus-visible:text-white focus-visible:outline-none"
+                                    >
+                                        {child.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )
+            ))}
+        </nav>
+
+		<!-- Right Side / Private Area (Desktop) -->
+		<div class="hidden md:flex items-center gap-4 shrink-0 border-white/70 border-l-2 pl-10">
+			<a 
+				href="/account" 
+				class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark text-white text-sm transition-all duration-200 shadow-md shadow-brand-red/10 hover:shadow-brand-red/20 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+			>
+				<CircleUserRound />
+				Área Privada
+			</a>
+		</div>
+
+		<!-- Mobile Controls (Hamburger button, right-aligned next to logo on mobile) -->
+		<button 
+			id="mobile-menu-button" 
+			class="md:hidden p-2 text-text-secondary hover:text-white hover:bg-slate-gray/30 rounded-lg focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:outline-none cursor-pointer" 
+			aria-label="Abrir menú"
+			aria-expanded="false"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 block" id="hamburger-icon">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+			</svg>
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden" id="close-icon">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+			</svg>
+		</button>
+
+	</div>
+</header>
+
+<!-- Mobile Navigation Drawer -->
+<div 
+	id="mobile-menu" 
+	class="fixed inset-0 top-30 bg-slate-black/95 backdrop-blur-lg border-t border-slate-border z-40 hidden md:hidden flex-col p-6 overflow-y-auto"
+>
+	<div class="flex flex-col gap-6">
+		<nav class="flex flex-col gap-2">
+			{NAVIGATION_LINKS.map((link) => (
+				!link.children ? (
+					<a 
+						href={link.href} 
+						class="text-lg font-medium text-text-secondary hover:text-white transition-colors py-3 px-2 rounded-lg hover:bg-slate-gray/25 border-b border-slate-border/20"
+					>
+						{link.label}
+					</a>
+				) : (
+					<div class="flex flex-col">
+						<button 
+							class="mobile-dropdown-button flex items-center justify-between w-full text-lg font-medium text-text-secondary hover:text-white py-3 px-2 rounded-lg hover:bg-slate-gray/25 border-b border-slate-border/20 cursor-pointer"
+							aria-expanded="false"
+						>
+							<span>{link.label}</span>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 transition-transform duration-200 arrow-icon text-text-muted">
+								<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+							</svg>
+						</button>
+						<div class="mobile-dropdown-content hidden flex-col pl-4 mt-1 gap-1 border-l border-slate-border/40">
+							{link.children.map((child) => (
+								<a 
+									href={child.href} 
+									class="text-base text-text-muted hover:text-white transition-colors py-2.5 px-2 rounded-lg hover:bg-slate-gray/25"
+								>
+									{child.label}
+								</a>
+							))}
+						</div>
+					</div>
+				)
+			))}
+		</nav>
+		<div class="mt-4 pt-4 border-t border-slate-border">
+			<a 
+				href="/account" 
+				class="flex items-center w-full text-center px-4 py-3 rounded-lg bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark text-white transition-colors duration-200"
+			>
+				<CircleUserRound />
+				Área Privada
+			</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	function initHeader() {
+		const mobileMenuButton = document.getElementById('mobile-menu-button');
+		const mobileMenu = document.getElementById('mobile-menu');
+		const hamburgerIcon = document.getElementById('hamburger-icon');
+		const closeIcon = document.getElementById('close-icon');
+
+		if (mobileMenuButton && mobileMenu && hamburgerIcon && closeIcon) {
+			mobileMenuButton.addEventListener('click', () => {
+				const isHidden = mobileMenu.classList.contains('hidden');
+				if (isHidden) {
+					mobileMenu.classList.remove('hidden');
+					mobileMenu.classList.add('flex');
+					hamburgerIcon.classList.add('hidden');
+					closeIcon.classList.remove('hidden');
+					mobileMenuButton.setAttribute('aria-expanded', 'true');
+					document.body.classList.add('overflow-hidden');
+				} else {
+					mobileMenu.classList.add('hidden');
+					mobileMenu.classList.remove('flex');
+					hamburgerIcon.classList.remove('hidden');
+					closeIcon.classList.add('hidden');
+					mobileMenuButton.setAttribute('aria-expanded', 'false');
+					document.body.classList.remove('overflow-hidden');
+				}
+			});
+		}
+
+		// Mobile dropdown toggles
+		const dropdownButtons = document.querySelectorAll('.mobile-dropdown-button');
+		dropdownButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				const content = button.nextElementSibling;
+				const arrow = button.querySelector('.arrow-icon');
+				if (content && arrow) {
+					const isHidden = content.classList.contains('hidden');
+					if (isHidden) {
+						content.classList.remove('hidden');
+						content.classList.add('flex');
+						arrow.classList.add('rotate-180');
+						button.setAttribute('aria-expanded', 'true');
+					} else {
+						content.classList.add('hidden');
+						content.classList.remove('flex');
+						arrow.classList.remove('rotate-180');
+						button.setAttribute('aria-expanded', 'false');
+					}
+				}
+			});
+		});
+	}
+
+	// Support for Astro View Transitions (re-runs scripts on page navigation)
+	document.addEventListener('astro:page-load', () => {
+		initHeader();
+	});
+</script>

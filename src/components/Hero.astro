@@ -1,0 +1,33 @@
+---
+import NextEvent from './NextEvent.astro'
+---
+
+<section id="hero" class="flex h-[40dvh] w-full">
+	<div class="relative h-full w-[82%]">
+		<div
+			class="abslute top-0 left-0 flex h-full w-full flex-col items-start justify-center bg-linear-to-r from-black/80 from-20% to-transparent to-50% p-4 pl-8">
+			<p class="text-brand-red-light w-3/10 text-sm uppercase md:text-xs">
+				Por la razón. Por la competición. Por San Andreas.
+			</p>
+			<h2 class="mt-2 w-3/12 text-4xl uppercase">
+				Regulamos.<br />Organizamos.<br />Impulsamos el Motor de San Andreas.
+			</h2>
+			<p class="text-md mt-4 w-3/12 text-xs text-balance">
+				El SAMF es la organización pública responsable de regular, organizar y desarrollar
+				las competiciones automovilísticas en todo San Andreas, garatizando seguridad,
+				igualdad y excelencia deportiva.
+			</p>
+			<a
+				href="/about-us"
+				class="bg-brand-red font-racing mt-4 inline-flex w-fit items-center gap-2 rounded-md px-4 py-2 transition-colors duration-200"
+				>Descubre más sobre nosotros</a
+			>
+		</div>
+		<img
+			src="https://r2.fivemanage.com/nvdv92hnh7O9851209eJW/mMQ2IAuDJnaN.webp"
+			alt="Circuito de Los Santos"
+			class="absolute inset-0 z-[-1] h-full w-full object-cover"
+		/>
+	</div>
+	<NextEvent server:defer />
+</section>

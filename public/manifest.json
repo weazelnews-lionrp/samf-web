@@ -1,0 +1,25 @@
+{
+	"name": "San Andreas Motorsports Federation",
+	"short_name": "SAMF",
+	"description": "Regulador Oficial de Competiciones Automovilísticas en San Andreas",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#0a1e3f",
+	"orientation": "portrait-primary",
+	"categories": ["motorsport", "government"],
+	"lang": "es",
+	"icons": [
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/samf.webp",
+			"sizes": "512x512",
+			"type": "image/webp"
+		}
+	]
+}

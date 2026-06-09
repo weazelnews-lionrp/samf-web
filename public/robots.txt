@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://samf.lioncommunity.es/sitemap-0.xml
+
+# Crawl-delay for responsible crawling
+Crawl-delay: 1
+
+# Block admin and API routes if any
+Disallow: /api/
+Disallow: /_*

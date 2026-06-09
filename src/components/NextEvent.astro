@@ -1,0 +1,46 @@
+---
+import Calendar from '@lucide/astro/icons/calendar'
+import { ChevronRight, MapPin } from '@lucide/astro/icons/index'
+
+const data = {
+	title: 'San Andreas Grand Prix',
+	startDate: '2026-10-10',
+	endDate: '2026-10-12',
+	location: 'Los Santos International Airport',
+}
+---
+
+<article
+	class="bg-slate-dark relative flex h-full w-[18%] flex-col items-center justify-center overflow-hidden rounded-lg p-4 px-15 text-white shadow-md">
+	<div class="absolute top-0 left-0">
+		<img
+			src="/images/flag.png"
+			alt="Bandera de San Andreas"
+			class="h-full w-full object-cover opacity-40"
+		/>
+	</div>
+	<div class="relative z-10 flex h-full w-full flex-col justify-center">
+		<span
+			class="text-brand-red/80 font-racing -ml-2 w-full text-xs tracking-[0.08em] uppercase italic"
+			>Próximo Evento</span
+		>
+		<h2 class="mb-4 w-full text-4xl italic">{data.title}</h2>
+		<div class="flex flex-col items-start justify-center gap-4 py-2 text-xs text-white/70">
+			<p class="flex items-center gap-2">
+				<Calendar />
+				{data.startDate} -
+				{data.endDate}
+			</p>
+			<p class="flex items-center gap-2 uppercase">
+				<MapPin />
+				{data.location}
+			</p>
+		</div>
+		<a
+			href="#"
+			class="font-racing mt-4 inline-flex w-full items-center justify-between rounded-md border-2 border-white bg-transparent px-4 py-2 text-white transition-all hover:bg-white hover:text-black">
+			<span>Ver Evento</span>
+			<ChevronRight size={20} />
+		</a>
+	</div>
+</article>

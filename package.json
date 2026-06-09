@@ -1,0 +1,36 @@
+{
+  "name": "samf-web",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "3.7.2",
+    "@astrojs/vercel": "10.0.3",
+    "@auth/core": "0.37.4",
+    "@lucide/astro": "^1.17.0",
+    "@tailwindcss/vite": "4.2.2",
+    "astro": "6.1.1",
+    "auth-astro": "4.2.0",
+    "drizzle-orm": "0.45.2",
+    "mysql2": "3.20.0",
+    "suneditor": "2.47.8",
+    "tailwindcss": "4.2.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.8",
+    "@tailwindcss/typography": "0.5.19",
+    "drizzle-kit": "0.31.10",
+    "prettier": "3.8.1",
+    "prettier-plugin-astro": "0.14.1",
+    "prettier-plugin-tailwindcss": "0.7.2",
+    "typescript": "5.9.3"
+  }
+}

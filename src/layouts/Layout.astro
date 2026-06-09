@@ -1,0 +1,101 @@
+---
+import '../styles/global.css'
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import { Font } from 'astro:assets'
+import { ClientRouter } from 'astro:transitions'
+import { SITE_CONFIG, SCHEMA_ORG } from '@/constants/Site'
+
+export interface Props {
+	title: string
+	description?: string
+	image?: string
+	isEmbed?: boolean
+	noindex?: boolean
+}
+
+const { title, description, image, isEmbed, noindex } = Astro.props
+
+// Default values
+const defaultDescription =
+	'San Andreas Motorsports Federation - Regulador Oficial de Competiciones Automovilísticas en San Andreas'
+const defaultImage = '/samf.webp'
+const siteUrl = Astro.site || 'https://samf.lioncommunity.es'
+
+// Final values
+const pageDescription = description || defaultDescription
+const pageImage = image
+	? image.startsWith('http')
+		? image
+		: new URL(image, siteUrl).toString()
+	: new URL(defaultImage, siteUrl).toString()
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl)
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<!-- Basic Meta Tags -->
+		<title>{title}</title>
+		<meta name="description" content={pageDescription} />
+		<link rel="canonical" href={canonicalUrl} />
+
+		<!-- Open Graph Meta Tags -->
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:image" content={pageImage} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="San Andreas Motorsports Federation" />
+		<meta property="og:locale" content="es_ES" />
+
+		<!-- Twitter Card Meta Tags -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={pageDescription} />
+		<meta name="twitter:image" content={pageImage} />
+
+		<!-- Additional Meta Tags -->
+		<meta name="author" content={SITE_CONFIG.author} />
+		<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+		<meta name="theme-color" content={SITE_CONFIG.themeColor} />
+
+		<!-- SEO Enhancement Meta Tags -->
+		<meta name="language" content="es" />
+		<meta name="geo.region" content="ES" />
+		<meta name="geo.placename" content="San Andreas" />
+		<meta name="distribution" content="global" />
+		<meta name="rating" content="general" />
+		<meta name="revisit-after" content="7 days" />
+
+		<!-- Schema.org JSON-LD -->
+		<script type="application/ld+json" set:html={JSON.stringify(SCHEMA_ORG)} />
+
+		<!-- Favicon -->
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+		<!-- PWA Manifest -->
+		<link rel="manifest" href="/manifest.json" />
+
+		<!-- Apple Touch Icon -->
+		<link rel="apple-touch-icon" href="/samf.webp" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="SAMF" />
+
+		<!-- View Transitions -->
+		<ClientRouter />
+
+		<Font cssVariable="--font-bebas-neue" preload />
+	</head>
+	<body class="bg-slate-black min-h-screen text-white">
+		{!isEmbed && <Header />}
+		<main class="h-fit min-h-[51.5dvh] pt-30 md:pt-26">
+			<slot />
+		</main>
+		{!isEmbed && <Footer />}
+	</body>
+</html>

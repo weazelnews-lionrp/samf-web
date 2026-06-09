@@ -1,0 +1,5 @@
+{
+	"files.associations": {
+		"**/styles/global.css": "tailwindcss"
+	}
+}

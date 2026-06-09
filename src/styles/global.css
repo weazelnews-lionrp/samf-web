@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+@theme {
+	/* Brand Red (Motorsports/Racing Red) */
+	--color-brand-red: #b62323;
+	--color-brand-red-dark: #991b1b;
+	--color-brand-red-light: #d32f2f;
+
+	/* Slate/Bluish Dark Palette */
+	--color-slate-black: #080c14; /* Main page background */
+	--color-slate-dark: #0c131d; /* Header, card, and main panel background */
+	--color-slate-normal: #121a27; /* Interactive elements, hover states */
+	--color-slate-gray: #172232; /* Interactive elements, hover states */
+	--color-slate-border: #1b2838; /* Borders and lines */
+
+	/* Text Colors */
+	--color-text-primary: #ffffff;
+	--color-text-muted: #94a3b8; /* Slate-gray text */
+	--color-text-secondary: #cbd5e1;
+
+	--font-racing: var(--font-bebas-neue);
+}
+
+@layer base {
+	html {
+		color-scheme: dark;
+	}
+	body {
+		background-color: var(--color-slate-black);
+		color: var(--color-text-primary);
+	}
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: var(--font-bebas-neue);
+		letter-spacing: 0.08em;
+	}
+}
