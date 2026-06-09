@@ -1,0 +1,136 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+
+// Fetch documents
+const docsUrl = new URL('/api/transparency/documents', Astro.url)
+let documents = []
+try {
+	const res = await fetch(docsUrl)
+	const data = await res.json()
+	if (data.success) {
+		documents = data.documents
+	}
+} catch (err) {
+	console.error('Error fetching transparency docs:', err)
+}
+
+// Fetch vehicle catalog
+const vehiclesUrl = new URL('/api/transparency/vehicles', Astro.url)
+let vehicles = []
+try {
+	const res = await fetch(vehiclesUrl)
+	const data = await res.json()
+	if (data.success) {
+		vehicles = data.catalog
+	}
+} catch (err) {
+	console.error('Error fetching vehicle catalog:', err)
+}
+
+// Categorize vehicles
+const categories = ['SUPERDEPORTIVOS', 'PRO_STOCK', 'FORMULA', 'RALLY', 'GT']
+const groupedVehicles = categories.reduce((acc, cat) => {
+	acc[cat] = vehicles.filter((v: any) => v.category === cat)
+	return acc
+}, {} as Record<string, any[]>)
+---
+
+<Layout title="Portal de Transparencia | SAMF" description="Portal de transparencia, cuentas públicas y catálogo de vehículos autorizados de la SAMF.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Page Header -->
+		<div class="mb-10">
+			<div class="flex items-center gap-3 mb-2">
+				<span class="w-8 h-[3px] bg-brand-red rounded-sm"></span>
+				<h1 class="text-3xl font-extrabold uppercase tracking-wider font-racing text-white">Portal de Transparencia</h1>
+			</div>
+			<p class="text-sm text-text-muted">
+				Acceso a las cuentas anuales auditadas, reglamentos técnicos y catálogo regulatorio de la federación (Art. 30.1).
+			</p>
+		</div>
+
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<!-- Official Documents (Column 1-2) -->
+			<div class="lg:col-span-2 flex flex-col gap-6">
+				<div class="flex items-center gap-3">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Documentación y Auditorías</h2>
+				</div>
+
+				{documents.length === 0 ? (
+					<Card class="text-center py-10 text-text-muted">
+						No hay documentos publicados en el portal de transparencia todavía.
+					</Card>
+				) : (
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						{documents.map((doc: any) => (
+							<Card hoverable class="flex flex-col justify-between">
+								<div>
+									<div class="flex justify-between items-start mb-3">
+										<span class="text-[9px] bg-slate-gray/60 border border-slate-border text-text-muted px-2 py-0.5 rounded font-mono uppercase tracking-wider">
+											{doc.category}
+										</span>
+										<span class="text-[10px] text-text-muted font-mono">
+											{new Date(doc.publishedAt).toLocaleDateString('es-ES')}
+										</span>
+									</div>
+									<h3 class="text-sm font-bold text-white font-racing leading-tight mb-2">{doc.title}</h3>
+									<p class="text-xs text-text-muted mb-4 leading-normal">{doc.description || 'Sin descripción adicional'}</p>
+								</div>
+								
+								<div class="border-t border-slate-border/50 pt-4 mt-2">
+									<a 
+										href={doc.fileUrl} 
+										target="_blank" 
+										class="inline-flex items-center justify-center gap-2 w-full text-center px-4 py-2 rounded-lg bg-brand-red/10 border border-brand-red/30 text-brand-red hover:bg-brand-red hover:text-white text-xs font-bold font-racing uppercase tracking-wider transition-all duration-200"
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-cloud"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>
+										Descargar Documento
+									</a>
+								</div>
+							</Card>
+						))}
+					</div>
+				)}
+			</div>
+
+			<!-- Vehicle Catalog (Column 3) -->
+			<div class="lg:col-span-1 flex flex-col gap-6">
+				<div class="flex items-center gap-3">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Modelos Autorizados</h2>
+				</div>
+
+				<Card class="bg-slate-dark/40 border-slate-border/50 p-5 flex flex-col gap-6">
+					<p class="text-[11px] text-text-muted leading-relaxed">
+						Catálogo homologado de modelos autorizados a disputar competiciones oficiales en San Andreas (Art. 8.1).
+					</p>
+
+					{categories.map((cat) => {
+						const list = groupedVehicles[cat] || []
+						return (
+							<div>
+								<h3 class="text-xs font-bold text-brand-red font-racing uppercase tracking-widest border-b border-slate-border/60 pb-1 mb-2">
+									{cat}
+								</h3>
+								{list.length === 0 ? (
+									<p class="text-[10px] text-text-muted italic px-1">Sin modelos homologados.</p>
+								) : (
+									<ul class="flex flex-col gap-1.5 text-xs text-text-secondary pl-1 font-mono">
+										{list.map((v) => (
+											<li class="flex justify-between items-center py-0.5 border-b border-slate-border/10">
+												<span>{v.brand} {v.model}</span>
+												<span class="text-[8px] text-text-muted">Homologado</span>
+											</li>
+										))}
+									</ul>
+								)}
+							</div>
+						)
+					})}
+				</Card>
+			</div>
+		</div>
+	</div>
+</Layout>

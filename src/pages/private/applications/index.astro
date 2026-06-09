@@ -1,0 +1,89 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+---
+
+<Layout title="Trámites y Solicitudes | SAMF" description="Bandeja de trámites de licencia, registros de chasis y homologaciones deportivas de la SAMF.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/applications" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Header Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Trámites y Licencias Administrativas</h1>
+				</div>
+				<p class="text-xs text-text-muted">
+					Selecciona el trámite correspondiente que deseas formalizar ante la junta administrativa de la federación.
+				</p>
+			</Card>
+
+			<!-- Applications Procedures Cards Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<!-- Solicitud de Licencia de Piloto -->
+				<Card hoverable class="flex flex-col justify-between h-full">
+					<div>
+						<div class="flex items-center justify-between mb-4">
+							<span class="text-xs font-bold text-brand-red font-racing uppercase tracking-wider">Artículo 15</span>
+							<span class="text-xs text-emerald-400 font-mono font-bold">$7,500 Tasa</span>
+						</div>
+						<h2 class="text-base font-bold text-white font-racing leading-tight mb-2">Licencia de Piloto Oficial</h2>
+						<p class="text-xs text-text-muted leading-relaxed mb-6">
+							Solicita u obtén la renovación anual de tu licencia de piloto. Requiere adjuntar documento de identidad, certificado médico oficial y comprobante del pago de la tasa.
+						</p>
+					</div>
+					<Button href="/private/applications/driver-license" variant="primary" class="w-full text-center">
+						Iniciar Trámite
+					</Button>
+				</Card>
+
+				<!-- Inscripción de Nueva Escudería -->
+				<Card hoverable class="flex flex-col justify-between h-full">
+					<div>
+						<div class="flex items-center justify-between mb-4">
+							<span class="text-xs font-bold text-brand-red font-racing uppercase tracking-wider">Artículo 12</span>
+							<span class="text-xs text-emerald-400 font-mono font-bold">$30,000 Tasa</span>
+						</div>
+						<h2 class="text-base font-bold text-white font-racing leading-tight mb-2">Inscripción de Escudería</h2>
+						<p class="text-xs text-text-muted leading-relaxed mb-6">
+							Registra legalmente un nuevo equipo de competición en el registro federativo. Requiere datos del director, lista inicial de pilotos, logo corporativo y justificante de pago.
+						</p>
+					</div>
+					<Button href="/private/applications/team-registration" variant="primary" class="w-full text-center">
+						Iniciar Trámite
+					</Button>
+				</Card>
+
+				<!-- Autorización de Eventos de Terceros -->
+				<Card hoverable class="flex flex-col justify-between h-full">
+					<div>
+						<div class="flex items-center justify-between mb-4">
+							<span class="text-xs font-bold text-brand-red font-racing uppercase tracking-wider">Artículo 10bis</span>
+							<span class="text-xs text-text-muted font-mono font-bold">Sin Costo</span>
+						</div>
+						<h2 class="text-base font-bold text-white font-racing leading-tight mb-2">Autorización Delegada para Eventos</h2>
+						<p class="text-xs text-text-muted leading-relaxed mb-6">
+							Formulario para promotores privados para solicitar permisos de competiciones (rallys, carreras urbanas). Requiere plano de trazado, plan de emergencias y seguro. Mínimo 10 días de antelación.
+						</p>
+					</div>
+					<Button href="/private/applications/delegated-event" variant="primary" class="w-full text-center">
+						Iniciar Trámite
+					</Button>
+				</Card>
+			</div>
+
+		</div>
+	</div>
+</Layout>

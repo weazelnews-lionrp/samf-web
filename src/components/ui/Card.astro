@@ -1,0 +1,25 @@
+---
+interface Props {
+	class?: string
+	hoverable?: boolean
+	glow?: boolean
+	[key: string]: any
+}
+
+const {
+	class: className = '',
+	hoverable = false,
+	glow = false,
+	...rest
+} = Astro.props
+
+const baseStyles = 'bg-slate-dark/80 backdrop-blur-md border border-slate-border rounded-xl p-6 relative overflow-hidden transition-all duration-300'
+const hoverStyles = hoverable ? 'hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-red/5 hover:border-slate-normal' : ''
+const glowStyles = glow ? 'before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-brand-red before:to-brand-red-light' : ''
+
+const combinedClasses = `${baseStyles} ${hoverStyles} ${glowStyles} ${className}`
+---
+
+<div class={combinedClasses} {...rest}>
+	<slot />
+</div>

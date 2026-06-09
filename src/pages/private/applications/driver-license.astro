@@ -1,0 +1,159 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+// Fetch active teams for selection options
+let teamOptions = []
+try {
+	const apiUrl = new URL('/api/teams?status=ACTIVE', Astro.url)
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		teamOptions = (data.teams || []).map((t: any) => ({
+			value: t.id,
+			label: t.name
+		}))
+	}
+} catch (err) {
+	console.error('Error fetching teams in license application:', err)
+}
+---
+
+<Layout title="Solicitud de Licencia | SAMF" description="Trámite de obtención o renovación de la Licencia de Piloto de la SAMF (Art. 15).">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/applications" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Back Link -->
+			<div>
+				<Button href="/private/applications" variant="outline" size="sm" class="flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+					Volver a Trámites
+				</Button>
+			</div>
+
+			<!-- Form Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2 border-b border-slate-border/50 pb-3">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Solicitud de Licencia de Piloto (Art. 15.2)</h1>
+				</div>
+				
+				<p class="text-xs text-text-muted mb-8 leading-relaxed">
+					Completa la solicitud formal de piloto. Es obligatorio adjuntar certificado médico de aptitud y el comprobante del pago de la tasa de obtención o renovación de <strong>$7,500</strong> (Art. 15.3).
+				</p>
+
+				<form id="driver-license-form" class="flex flex-col gap-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<Input 
+							label="Nombre Completo (como figura en el DNI)" 
+							type="text" 
+							name="fullName" 
+							value={character.name}
+							required 
+						/>
+						<Input 
+							label="Escudería de Vinculación" 
+							type="select" 
+							name="targetTeamId" 
+							placeholder="Selecciona una escudería activa..."
+							options={teamOptions}
+							required 
+						/>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+						<Input 
+							label="Documento de Identidad (DNI) (PDF/Imagen)" 
+							type="file" 
+							name="identityDocFile" 
+							accept=".pdf,image/*"
+							required 
+						/>
+						<Input 
+							label="Certificado Médico de Aptitud (PDF)" 
+							type="file" 
+							name="medicalCertificateFile" 
+							accept=".pdf"
+							required 
+						/>
+						<Input 
+							label="Justificante Pago de Tasas ($7,500)" 
+							type="file" 
+							name="paymentProofFile" 
+							accept=".pdf,image/*"
+							required 
+						/>
+					</div>
+
+					<div class="flex justify-end gap-3 mt-4 border-t border-slate-border/30 pt-6">
+						<Button type="button" variant="outline" href="/private/applications">
+							Cancelar
+						</Button>
+						<Button type="submit" variant="primary" id="submit-btn">
+							Enviar Solicitud
+						</Button>
+					</div>
+				</form>
+			</Card>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const form = document.getElementById('driver-license-form') as HTMLFormElement;
+		const submitBtn = document.getElementById('submit-btn');
+
+		if (form) {
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				if (submitBtn) {
+					submitBtn.setAttribute('disabled', 'true');
+					submitBtn.textContent = 'Enviando...';
+				}
+
+				const formData = new FormData(form);
+
+				try {
+					const res = await fetch('/api/private/applications/driver-license', {
+						method: 'POST',
+						body: formData
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Solicitud de licencia enviada.');
+						window.location.href = '/private/dashboard';
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error desconocido al solicitar licencia.'));
+						if (submitBtn) {
+							submitBtn.removeAttribute('disabled');
+							submitBtn.textContent = 'Enviar Solicitud';
+						}
+					}
+				} catch (err) {
+					console.error('Error submitting driver license:', err);
+					alert('Error de red en el servidor.');
+					if (submitBtn) {
+						submitBtn.removeAttribute('disabled');
+						submitBtn.textContent = 'Enviar Solicitud';
+					}
+				}
+			});
+		}
+	});
+</script>

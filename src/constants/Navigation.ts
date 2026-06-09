@@ -5,56 +5,48 @@ export const NAVIGATION_LINKS = [
 	},
 	{
 		label: 'La Federación',
-		href: '/about-us',
+		href: '/transparency',
 		children: [
 			{
-				label: 'Junta Directiva',
-				href: '/board',
+				label: 'Transparencia y Cuentas',
+				href: '/transparency',
 			},
 			{
-				label: 'Contacto',
-				href: '/contact',
+				label: 'Escuderías Oficiales',
+				href: '/teams',
+			},
+			{
+				label: 'Pilotos Registrados',
+				href: '/drivers',
 			},
 		],
 	},
 	{
 		label: 'Competiciones',
-		href: '/championships',
+		href: '/calendar',
 		children: [
 			{
-				label: 'Liga de San Andreas',
-				href: '/san-andreas-league',
+				label: 'Calendario Oficial',
+				href: '/calendar',
 			},
 			{
-				label: 'Rally Circuito',
-				href: '/rally-circuito',
-			},
-			{
-				label: 'Drift Championship',
-				href: '/drift-championship',
+				label: 'Clasificaciones y Puntos',
+				href: '/standings',
 			},
 		],
 	},
 	{
-		label: 'Normativa',
-		href: '/rules',
+		label: 'Trámites',
+		href: '/private/applications',
 		children: [
 			{
-				label: 'Documentos',
-				href: '/docs',
+				label: 'Licencias y Permisos',
+				href: '/private/applications',
 			},
 			{
-				label: 'Legislación Aplicable',
-				href: '/legislation',
+				label: 'Homologación de Vehículos',
+				href: '/private/vehicles',
 			},
 		],
-	},
-	{
-		label: 'Servicios',
-		href: '/services',
-	},
-	{
-		label: 'Noticias',
-		href: '/news',
 	},
 ]

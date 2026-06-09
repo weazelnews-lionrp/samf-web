@@ -1,0 +1,172 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+
+// Fetch standings data
+const apiUrl = new URL('/api/standings', Astro.url)
+let driversStandings = []
+let constructorsStandings = []
+let rookieStandings = []
+
+try {
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		driversStandings = data.driversStandings
+		constructorsStandings = data.constructorsStandings
+		rookieStandings = data.rookieStandings
+	}
+} catch (err) {
+	console.error('Error fetching standings:', err)
+}
+---
+
+<Layout title="Clasificaciones Generales | SAMF" description="Tablas clasificatorias oficiales actualizadas tras cada Gran Premio de la Liga San Andreas (LSA).">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Page Header -->
+		<div class="mb-10">
+			<div class="flex items-center gap-3 mb-2">
+				<span class="w-8 h-[3px] bg-brand-red rounded-sm"></span>
+				<h1 class="text-3xl font-extrabold uppercase tracking-wider font-racing text-white">Clasificaciones Generales</h1>
+			</div>
+			<p class="text-sm text-text-muted">
+				Tablas de puntos de la temporada actual recalculadas automáticamente tras cada carrera oficial (Art. 21.4 y 24.1).
+			</p>
+		</div>
+
+		<!-- Columns layout for different tables -->
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<!-- Drivers Classification -->
+			<div class="lg:col-span-1 flex flex-col gap-4">
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-lg font-bold uppercase tracking-wider font-racing text-white">Campeonato de Pilotos</h2>
+				</div>
+				
+				<Card class="p-0 overflow-hidden">
+					<table class="w-full text-left border-collapse text-xs">
+						<thead>
+							<tr class="bg-slate-gray/30 border-b border-slate-border text-[9px] uppercase tracking-wider text-text-muted font-racing">
+								<th class="py-3 px-4 text-center">Pos</th>
+								<th class="py-3 px-4">Piloto</th>
+								<th class="py-3 px-4 text-right">Pts</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-slate-border/30">
+							{driversStandings.length === 0 ? (
+								<tr>
+									<td colspan="3" class="py-6 text-center text-text-muted">Sin datos.</td>
+								</tr>
+							) : (
+								driversStandings.map((row: any) => (
+									<tr class="hover:bg-slate-gray/10 transition-colors">
+										<td class="py-3.5 px-4 text-center font-racing font-bold text-white">
+											{row.position}º
+										</td>
+										<td class="py-3.5 px-4 font-semibold text-white">
+											<div class="flex flex-col">
+												<a href={`/drivers/${row.driverId}`} class="hover:text-brand-red transition-colors">
+													{row.driverName}
+												</a>
+												<span class="text-[9px] text-text-muted font-normal">{row.teamName}</span>
+											</div>
+										</td>
+										<td class="py-3.5 px-4 text-right font-extrabold text-white font-racing">
+											{row.points}
+										</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</Card>
+			</div>
+
+			<!-- Constructors Classification -->
+			<div class="lg:col-span-1 flex flex-col gap-4">
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-lg font-bold uppercase tracking-wider font-racing text-white">Campeonato de Constructores</h2>
+				</div>
+				
+				<Card class="p-0 overflow-hidden">
+					<table class="w-full text-left border-collapse text-xs">
+						<thead>
+							<tr class="bg-slate-gray/30 border-b border-slate-border text-[9px] uppercase tracking-wider text-text-muted font-racing">
+								<th class="py-3 px-4 text-center">Pos</th>
+								<th class="py-3 px-4">Escudería</th>
+								<th class="py-3 px-4 text-right">Pts</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-slate-border/30">
+							{constructorsStandings.length === 0 ? (
+								<tr>
+									<td colspan="3" class="py-6 text-center text-text-muted">Sin datos.</td>
+								</tr>
+							) : (
+								constructorsStandings.map((row: any) => (
+									<tr class="hover:bg-slate-gray/10 transition-colors">
+										<td class="py-3.5 px-4 text-center font-racing font-bold text-white">
+											{row.position}º
+										</td>
+										<td class="py-3.5 px-4 font-semibold text-white">
+											<a href={`/teams/${row.teamId}`} class="hover:text-brand-red transition-colors">
+												{row.teamName}
+											</a>
+										</td>
+										<td class="py-3.5 px-4 text-right font-extrabold text-white font-racing">
+											{row.points}
+										</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</Card>
+			</div>
+
+			<!-- Rookie Classification -->
+			<div class="lg:col-span-1 flex flex-col gap-4">
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-lg font-bold uppercase tracking-wider font-racing text-white">Trofeo Mejor Novato</h2>
+				</div>
+				
+				<Card class="p-0 overflow-hidden">
+					<table class="w-full text-left border-collapse text-xs">
+						<thead>
+							<tr class="bg-slate-gray/30 border-b border-slate-border text-[9px] uppercase tracking-wider text-text-muted font-racing">
+								<th class="py-3 px-4 text-center">Pos</th>
+								<th class="py-3 px-4">Piloto Novato</th>
+								<th class="py-3 px-4 text-right">Pts</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-slate-border/30">
+							{rookieStandings.length === 0 ? (
+								<tr>
+									<td colspan="3" class="py-6 text-center text-text-muted">Sin datos de novatos.</td>
+								</tr>
+							) : (
+								rookieStandings.map((row: any) => (
+									<tr class="hover:bg-slate-gray/10 transition-colors">
+										<td class="py-3.5 px-4 text-center font-racing font-bold text-white">
+											{row.position}º
+										</td>
+										<td class="py-3.5 px-4 font-semibold text-white">
+											<a href={`/drivers/${row.driverId}`} class="hover:text-brand-red transition-colors">
+												{row.name || row.driverName}
+											</a>
+										</td>
+										<td class="py-3.5 px-4 text-right font-extrabold text-white font-racing">
+											{row.points}
+										</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</Card>
+			</div>
+		</div>
+	</div>
+</Layout>

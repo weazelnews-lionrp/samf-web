@@ -1,46 +1,87 @@
 ---
-import Calendar from '@lucide/astro/icons/calendar'
-import { ChevronRight, MapPin } from '@lucide/astro/icons/index'
-
 const data = {
 	title: 'San Andreas Grand Prix',
-	startDate: '2026-10-10',
-	endDate: '2026-10-12',
-	location: 'Los Santos International Airport',
+	date: '18 - 20 DE JULIO, 2025',
+	location: 'MAZE BANK CIRCUIT',
 }
 ---
 
 <article
-	class="bg-slate-dark relative flex h-full w-[18%] flex-col items-center justify-center overflow-hidden rounded-lg p-4 px-15 text-white shadow-md">
-	<div class="absolute top-0 left-0">
+	class="bg-slate-dark relative flex h-full min-h-[300px] w-full flex-col justify-between overflow-hidden p-6 text-white md:p-8">
+	<!-- Grid overlay/background -->
+	<div
+		class="from-slate-gray/30 absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] via-transparent to-transparent opacity-70">
+	</div>
+
+	<!-- Background Image (Faded Flag) -->
+	<div class="pointer-events-none absolute inset-0 z-0 opacity-20">
 		<img
 			src="/images/flag.png"
 			alt="Bandera de San Andreas"
-			class="h-full w-full object-cover opacity-40"
+			class="h-full w-full scale-110 object-cover object-bottom-right"
 		/>
 	</div>
-	<div class="relative z-10 flex h-full w-full flex-col justify-center">
-		<span
-			class="text-brand-red/80 font-racing -ml-2 w-full text-xs tracking-[0.08em] uppercase italic"
-			>Próximo Evento</span
-		>
-		<h2 class="mb-4 w-full text-4xl italic">{data.title}</h2>
-		<div class="flex flex-col items-start justify-center gap-4 py-2 text-xs text-white/70">
-			<p class="flex items-center gap-2">
-				<Calendar />
-				{data.startDate} -
-				{data.endDate}
-			</p>
-			<p class="flex items-center gap-2 uppercase">
-				<MapPin />
-				{data.location}
-			</p>
+
+	<div class="relative z-10 flex h-full w-full flex-col justify-between gap-6">
+		<div class="flex flex-col gap-1">
+			<span
+				class="text-brand-red font-racing mb-1 block text-xs font-bold tracking-[0.15em] uppercase">
+				Próximo Evento
+			</span>
+			<h3
+				class="font-racing flex flex-wrap items-center gap-x-2 text-2xl leading-none font-extrabold tracking-wider text-white uppercase italic lg:text-3xl">
+				<span>{data.title}</span>
+			</h3>
 		</div>
+
+		<div class="flex flex-col gap-3.5 text-xs lg:text-sm">
+			<div class="text-text-secondary flex items-center gap-3">
+				<svg
+					class="text-brand-red h-5 w-5 shrink-0"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					viewBox="0 0 24 24"
+					xmlns="http://www.w3.org/2000/svg">
+					<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+					<line x1="16" y1="2" x2="16" y2="6"></line>
+					<line x1="8" y1="2" x2="8" y2="6"></line>
+					<line x1="3" y1="10" x2="21" y2="10"></line>
+				</svg>
+				<span class="font-racing font-medium tracking-wide text-white/90">{data.date}</span>
+			</div>
+
+			<div class="text-text-secondary flex items-center gap-3">
+				<svg
+					class="text-brand-red h-5 w-5 shrink-0"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					viewBox="0 0 24 24"
+					xmlns="http://www.w3.org/2000/svg">
+					<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+					<circle cx="12" cy="10" r="3"></circle>
+				</svg>
+				<span class="font-racing font-medium tracking-wide text-white/90"
+					>{data.location}</span
+				>
+			</div>
+		</div>
+
 		<a
-			href="#"
-			class="font-racing mt-4 inline-flex w-full items-center justify-between rounded-md border-2 border-white bg-transparent px-4 py-2 text-white transition-all hover:bg-white hover:text-black">
+			href="/competitions/event-details"
+			class="font-racing hover:text-slate-black group mt-auto inline-flex w-full items-center justify-between rounded-lg border border-white/20 bg-transparent px-5 py-2.5 text-sm font-bold tracking-wider text-white uppercase shadow-md transition-all duration-200 hover:border-white hover:bg-white">
 			<span>Ver Evento</span>
-			<ChevronRight size={20} />
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke-width="2.5"
+				stroke="currentColor"
+				class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"
+				></path>
+			</svg>
 		</a>
 	</div>
 </article>

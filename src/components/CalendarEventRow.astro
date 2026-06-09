@@ -1,0 +1,48 @@
+---
+interface Props {
+	day: string
+	month: string
+	title: string
+	location: string
+	isNext?: boolean
+	titleColorClass?: string
+}
+
+const { day, month, title, location, isNext = false, titleColorClass = 'text-white' } = Astro.props
+---
+
+<div class="group flex items-center py-3.5">
+	<!-- Date Box -->
+	<div class="flex w-12 shrink-0 flex-col text-center">
+		<span class="font-racing text-lg leading-none font-bold tracking-normal text-white/95"
+			>{day}</span
+		>
+		<span
+			class={`text-[9px] font-bold font-racing tracking-wider uppercase mt-0.5 ${isNext ? 'text-brand-red' : 'text-text-muted'}`}
+			>{month}</span
+		>
+	</div>
+
+	<!-- Vertical Divider -->
+	<div class="bg-slate-border/80 mx-4 h-8 w-px"></div>
+
+	<!-- Info -->
+	<div class="grow">
+		<h4
+			class={`font-racing text-sm font-bold tracking-wider leading-tight group-hover:text-brand-red transition-colors uppercase ${isNext ? '' : 'italic'} ${titleColorClass}`}>
+			{title}
+		</h4>
+		<p class="text-text-muted mt-0.5 text-[10px] tracking-wide uppercase">
+			{location}
+		</p>
+	</div>
+
+	<!-- Next Badge -->
+	{
+		isNext && (
+			<span class="font-racing ml-2 shrink-0 rounded border border-emerald-800/40 bg-emerald-950/65 px-2 py-0.5 text-[9px] font-bold tracking-wider text-emerald-400 uppercase select-none">
+				Próximo
+			</span>
+		)
+	}
+</div>

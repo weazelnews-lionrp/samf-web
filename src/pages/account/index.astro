@@ -1,0 +1,226 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+
+const { user, session, citizenid, character } = Astro.locals
+
+const changeCharacter = Astro.url.searchParams.get('change') === 'true'
+
+// If changeCharacter is requested, clear the cookie and reload the page without the parameter
+if (changeCharacter) {
+	Astro.cookies.delete('samf_citizenid', { path: '/' })
+	return Astro.redirect('/account')
+}
+
+// Fetch characters if logged in but no active citizenid
+let characters = []
+let errorMsg = ''
+if (session && !citizenid) {
+	try {
+		const apiUrl = new URL('/api/auth/characters', Astro.url)
+		const res = await fetch(apiUrl, {
+			headers: {
+				// Pass cookies to the internal API request
+				Cookie: Astro.request.headers.get('cookie') || ''
+			}
+		})
+		const data = await res.json()
+		if (data.success) {
+			characters = data.characters || []
+		} else {
+			errorMsg = data.error?.message || 'No se pudieron recuperar los personajes.'
+		}
+	} catch (err) {
+		console.error('Error fetching characters:', err)
+		errorMsg = 'Error en el servidor al recuperar tus personajes de FiveM.'
+	}
+}
+---
+
+<Layout title="Área Deportiva | SAMF" description="Acceso seguro al Portal de Escuderías y Pilotos de la SAMF mediante Discord.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-16 flex items-center justify-center min-h-[70vh]">
+		<div class="w-full max-w-2xl">
+			
+			<!-- STATE 1: Not Authenticated with Discord -->
+			{!session && (
+				<Card glow class="text-center p-8 md:p-12">
+					<div class="w-20 h-20 rounded-full bg-brand-red/10 border border-brand-red/30 flex items-center justify-center text-brand-red mx-auto mb-6 shadow-lg shadow-brand-red/5">
+						<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-lock"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><rect width="8" height="5" x="8" y="11" rx="1"/><path d="M10 11V9a2 2 0 1 1 4 0v2"/></svg>
+					</div>
+					
+					<h1 class="text-2xl md:text-3xl font-extrabold font-racing text-white uppercase tracking-wider mb-3">Área Deportiva SAMF</h1>
+					<p class="text-sm text-text-secondary max-w-md mx-auto mb-8 leading-relaxed">
+						Inicia sesión con tu cuenta de Discord para realizar trámites, licencias de piloto, registrar escuderías y acceder a tu panel de control.
+					</p>
+					
+					<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+						<Button id="discord-login-btn" variant="primary" size="lg" class="w-full sm:w-auto">
+							<svg class="w-5 h-5 fill-current mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>
+							Acceder con Discord
+						</Button>
+						<Button href="/" variant="outline" class="w-full sm:w-auto">
+							Volver a Inicio
+						</Button>
+					</div>
+				</Card>
+			)}
+
+			<!-- STATE 2: Authenticated with Discord, selecting character -->
+			{session && !citizenid && (
+				<Card glow class="p-6 md:p-8">
+					<div class="flex items-center justify-between border-b border-slate-border pb-4 mb-6">
+						<div>
+							<h1 class="text-xl font-bold font-racing text-white uppercase tracking-wider">Selección de Personaje</h1>
+							<p class="text-xs text-text-muted mt-1">Elige el personaje (citizenid) con el que deseas tramitar.</p>
+						</div>
+						<Button href="/api/auth/logout" variant="outline" size="sm">
+							Cerrar Sesión
+						</Button>
+					</div>
+
+					{errorMsg && (
+						<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-xs text-red-400 mb-6">
+							{errorMsg}
+						</div>
+					)}
+
+					{characters.length === 0 ? (
+						<div class="text-center py-10 text-text-muted">
+							<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-x mx-auto mb-3 opacity-30"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="22" x2="16" y1="11" y2="17"/><line x1="16" x2="22" y1="11" y2="17"/></svg>
+							No se encontraron personajes elegibles vinculados a tu cuenta de Discord. Asegúrate de estar registrado en el servidor de FiveM.
+						</div>
+					) : (
+						<div class="flex flex-col gap-4">
+							{characters.map((char: any) => (
+								<div 
+									class="character-card bg-slate-gray/30 border border-slate-border rounded-xl p-5 hover:border-brand-red hover:bg-slate-gray/45 transition-all duration-200 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none"
+									data-citizenid={char.citizenid}
+								>
+									<div>
+										<h3 class="text-base font-bold text-white font-racing leading-tight">{char.charinfo?.firstname} {char.charinfo?.lastname}</h3>
+										<p class="text-xs text-text-muted font-mono mt-1">ID: {char.citizenid}</p>
+										
+										<div class="flex gap-4 mt-3 text-[11px] text-text-secondary font-mono">
+											<span>Trabajo: <span class="text-white font-medium">{char.job?.label} ({char.job?.grade?.name})</span></span>
+										</div>
+									</div>
+									
+									<div class="text-left sm:text-right shrink-0 flex flex-col gap-1.5">
+										<span class="text-xs font-bold text-emerald-400 font-mono">Banco: ${char.money?.bank?.toLocaleString()}</span>
+										<span class="text-[10px] text-text-muted font-mono">Efectivo: ${char.money?.cash?.toLocaleString()}</span>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+				</Card>
+			)}
+
+			<!-- STATE 3: Authenticated with character chosen -->
+			{session && citizenid && character && (
+				<Card glow class="p-8">
+					<div class="text-center pb-6 border-b border-slate-border mb-6">
+						<div class="relative w-20 h-20 mx-auto mb-4">
+							<div class="w-20 h-20 rounded-full bg-brand-red/10 border border-brand-red/30 flex items-center justify-center text-brand-red font-black text-2xl shadow-md">
+								{character.name.charAt(0)}
+							</div>
+						</div>
+						<h1 class="text-2xl font-extrabold font-racing text-white leading-tight mb-1">{character.name}</h1>
+						<p class="text-xs text-text-muted font-mono">Citizen ID: {citizenid}</p>
+						<div class="mt-3 inline-flex items-center gap-2">
+							<span class="text-xs text-text-muted uppercase tracking-wider">Rol de Acceso:</span>
+							<StatusBadge status={user?.role || 'PUBLIC'} />
+						</div>
+					</div>
+
+					<div class="flex flex-col gap-4">
+						<!-- Dashboard Direct Redirects -->
+						{user?.role?.startsWith('STAFF_') ? (
+							<Button href="/admin/requests" variant="primary" size="lg" class="w-full text-center">
+								Ir al Panel Administrativo (Intranet)
+							</Button>
+						) : (
+							<Button href="/private/dashboard" variant="primary" size="lg" class="w-full text-center">
+								Ir a mi Panel Deportivo (Trámites)
+							</Button>
+						)}
+						
+						<div class="grid grid-cols-2 gap-4 mt-2">
+							<Button href="/account?change=true" variant="outline" class="text-center text-xs">
+								Cambiar Personaje
+							</Button>
+							<Button href="/api/auth/logout" variant="secondary" class="text-center text-xs text-red-400 hover:text-red-300">
+								Cerrar Sesión
+							</Button>
+						</div>
+					</div>
+				</Card>
+			)}
+
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { authClient } from '@/lib/auth-client'
+
+	// Handle interactions
+	document.addEventListener('astro:page-load', () => {
+		// Discord Login via Better Auth Client
+		const loginBtn = document.getElementById('discord-login-btn');
+		if (loginBtn) {
+			loginBtn.addEventListener('click', async () => {
+				try {
+					await authClient.signIn.social({
+						provider: 'discord',
+						callbackURL: window.location.origin + '/account'
+					});
+				} catch (err) {
+					console.error('Error signing in with Discord:', err);
+					alert('Error al iniciar sesión con Discord.');
+				}
+			});
+		}
+
+		// Handle character selection posting
+		const cards = document.querySelectorAll('.character-card');
+		cards.forEach(card => {
+			card.addEventListener('click', async () => {
+				const citizenid = card.getAttribute('data-citizenid');
+				if (!citizenid) return;
+
+				// Add loading effect
+				card.classList.add('border-brand-red', 'bg-brand-red/5');
+				
+				try {
+					const res = await fetch('/api/auth/select-character', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ citizenid })
+					});
+					
+					const data = await res.json();
+					if (data.success) {
+						// Redirect dynamically depending on roles
+						if (data.role && data.role.startsWith('STAFF_')) {
+							window.location.href = '/admin/requests';
+						} else {
+							window.location.href = '/private/dashboard';
+						}
+					} else {
+						alert(data.error?.message || 'Error al seleccionar personaje');
+						card.classList.remove('border-brand-red', 'bg-brand-red/5');
+					}
+				} catch (err) {
+					console.error('Error selecting character:', err);
+					alert('Error de conexión en el servidor.');
+					card.classList.remove('border-brand-red', 'bg-brand-red/5');
+				}
+			});
+		});
+	});
+</script>

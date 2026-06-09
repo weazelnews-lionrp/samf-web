@@ -1,0 +1,76 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection & Role check (Staff Inspector only)
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+if (user.role !== 'STAFF_INSPECTOR' && user.role !== 'STAFF_ADMIN' && user.role !== 'STAFF_DIRECTOR_GENERAL') {
+	return Astro.redirect('/private/dashboard')
+}
+---
+
+<Layout title="Inspección y Seguridad | SAMF Intranet" description="Panel de inspector técnico para homologación de circuitos y controles sanitarios.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/admin/security" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Header Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Seguridad e Inspección Técnica</h1>
+				</div>
+				<p class="text-xs text-text-muted">
+					Acciones reguladoras delegadas a Inspectores Técnicos para garantizar el cumplimiento de la seguridad física de las pistas y la salud de los competidores (Art. 6.7 y 16.1).
+				</p>
+			</Card>
+
+			<!-- Grid Options -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<!-- Auditorías de Circuitos -->
+				<Card hoverable class="flex flex-col justify-between h-full">
+					<div>
+						<div class="flex items-center justify-between mb-4">
+							<span class="text-xs font-bold text-brand-red font-racing uppercase tracking-wider">Artículo 6.7</span>
+							<span class="text-[10px] text-text-muted font-mono font-bold">Auditoría Anual</span>
+						</div>
+						<h2 class="text-base font-bold text-white font-racing leading-tight mb-2">Auditoría de Circuitos</h2>
+						<p class="text-xs text-text-muted leading-relaxed mb-6">
+							Registra las inspecciones técnicas de seguridad anuales en las pistas. Permite certificar el estado de las barreras de protección, el asfalto y habilitar o inhabilitar trazados de Grandes Premios.
+						</p>
+					</div>
+					<Button href="/admin/security/circuit-audits" variant="primary" class="w-full text-center">
+						Iniciar Auditoría
+					</Button>
+				</Card>
+
+				<!-- Registro de Controles Sanitarios -->
+				<Card hoverable class="flex flex-col justify-between h-full">
+					<div>
+						<div class="flex items-center justify-between mb-4">
+							<span class="text-xs font-bold text-brand-red font-racing uppercase tracking-wider">Artículo 16.1</span>
+							<span class="text-[10px] text-text-muted font-mono font-bold">Controles Analíticos</span>
+						</div>
+						<h2 class="text-base font-bold text-white font-racing leading-tight mb-2">Controles de Alcohol y Sustancias</h2>
+						<p class="text-xs text-text-muted leading-relaxed mb-6">
+							Registra las analíticas obligatorias preventivas realizadas pre-evento y post-evento a los pilotos. Los positivos suspenden automáticamente la licencia e inician expediente sancionador (Art. 16.9).
+						</p>
+					</div>
+					<Button href="/admin/security/substance-controls" variant="primary" class="w-full text-center">
+						Registrar Control
+					</Button>
+				</Card>
+			</div>
+
+		</div>
+	</div>
+</Layout>

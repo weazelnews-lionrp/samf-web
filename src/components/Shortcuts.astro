@@ -1,0 +1,65 @@
+---
+import { 
+	CalendarDays, 
+	ClipboardList, 
+	IdCard, 
+	Shield, 
+	FileText 
+} from '@lucide/astro/icons'
+
+const shotcuts = [
+	{
+		icon: CalendarDays,
+		label: 'Calendario',
+		sublabel: 'de Competiciones',
+		href: '/calendar',
+	},
+	{
+		icon: ClipboardList,
+		label: 'Resultados',
+		sublabel: 'y Clasificaciones',
+		href: '/standings',
+	},
+	{
+		icon: IdCard,
+		label: 'Licencias',
+		sublabel: 'y Permisos',
+		href: '/private/applications',
+	},
+	{
+		icon: Shield,
+		label: 'Reglamentos',
+		sublabel: 'Técnicos',
+		href: '/transparency',
+	},
+	{
+		icon: FileText,
+		label: 'Inscripciones',
+		sublabel: 'y Solicitudes',
+		href: '/private/applications',
+	},
+]
+---
+
+<section class="bg-slate-dark border-y border-slate-border w-full">
+	<div class="mx-auto grid w-full grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-slate-border">
+		{
+			shotcuts.map((shortcut) => (
+				<a
+					href={shortcut.href}
+					class="group flex items-center gap-4 lg:gap-6 px-6 py-5 tracking-wide uppercase transition-all duration-200 hover:bg-slate-gray/30"
+				>
+					<shortcut.icon
+						size={36}
+						stroke-width={1.2}
+						class="text-brand-red transition-transform duration-300 group-hover:scale-110 shrink-0"
+					/>
+					<div class="font-racing flex flex-col leading-tight select-none">
+						<span class="font-bold text-white text-base group-hover:text-brand-red transition-colors duration-200">{shortcut.label}</span>
+						<span class="text-text-muted text-[11px] font-medium tracking-wider mt-0.5">{shortcut.sublabel}</span>
+					</div>
+				</a>
+			))
+		}
+	</div>
+</section>

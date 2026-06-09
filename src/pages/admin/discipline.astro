@@ -1,0 +1,452 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection & Role check
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+const isCommittee = user.role === 'STAFF_DISCIPLINA' || user.role === 'STAFF_ADMIN' || user.role === 'STAFF_DIRECTOR_GENERAL'
+const isDirectorGen = user.role === 'STAFF_DIRECTOR_GENERAL' || user.role === 'STAFF_ADMIN'
+
+if (!isCommittee && !isDirectorGen) {
+	return Astro.redirect('/private/dashboard')
+}
+
+// 1. Fetch pilots for select dropdowns
+let drivers = []
+try {
+	const res = await fetch(new URL('/api/drivers', Astro.url))
+	const data = await res.json()
+	if (data.success) {
+		drivers = data.drivers || []
+	}
+} catch (err) {
+	console.error('Error fetching drivers:', err)
+}
+
+// 2. Fetch teams for select dropdowns
+let teams = []
+try {
+	const res = await fetch(new URL('/api/teams', Astro.url))
+	const data = await res.json()
+	if (data.success) {
+		teams = data.teams || []
+	}
+} catch (err) {
+	console.error('Error fetching teams:', err)
+}
+
+// 3. Fetch active disciplinary files (Committee view)
+let filesList = []
+if (isCommittee) {
+	try {
+		const res = await fetch(new URL('/api/admin/discipline/expedientes', Astro.url), {
+			headers: { Cookie: Astro.request.headers.get('cookie') || '' }
+		})
+		const data = await res.json()
+		if (data.success) {
+			filesList = data.files || []
+		}
+	} catch (err) {
+		console.error('Error fetching expedientes:', err)
+	}
+}
+
+// 4. Fetch pending appeals (Director General view)
+let appealsList = []
+if (isDirectorGen) {
+	try {
+		const res = await fetch(new URL('/api/admin/discipline/appeals', Astro.url), {
+			headers: { Cookie: Astro.request.headers.get('cookie') || '' }
+		})
+		const data = await res.json()
+		if (data.success) {
+			appealsList = data.appeals || []
+		}
+	} catch (err) {
+		console.error('Error fetching appeals:', err)
+	}
+}
+
+const driverOptions = drivers.map((d: any) => ({ value: d.id, label: `${d.name} (${d.teamName || 'Sin Escudería'})` }))
+const teamOptions = teams.map((t: any) => ({ value: t.id, label: t.name }))
+const severityOptions = [
+	{ value: 'LEVE', label: 'Infracción Leve' },
+	{ value: 'GRAVE', label: 'Infracción Grave' },
+	{ value: 'MUY_GRAVE', label: 'Infracción Muy Grave' }
+]
+---
+
+<Layout title="Comité Disciplinario | SAMF Intranet" description="Gestión de expedientes sancionadores y resolución de recursos de apelación en la SAMF.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/admin/discipline" role={user.role} />
+
+		<!-- Main Content -->
+		<div class="flex-1 flex flex-col gap-8">
+			<!-- Header Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Régimen Disciplinario (Art. 18 / 19)</h1>
+				</div>
+				<p class="text-xs text-text-muted">
+					Módulo especial de apertura de expedientes por faltas deportivas (Comité) y resolución de recursos presentados ante Dirección General.
+				</p>
+			</Card>
+
+			<!-- 1. COMMITTEE VIEW: Open sanction file and list cases -->
+			{isCommittee && (
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+					<!-- Open Disciplinary File Form -->
+					<div class="lg:col-span-1 flex flex-col gap-4">
+						<div class="flex items-center gap-3">
+							<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+							<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white">Abrir Expediente</h2>
+						</div>
+
+						<Card>
+							<form id="open-case-form" class="flex flex-col gap-4">
+								<Input 
+									label="Piloto Involucrado (Opcional)" 
+									type="select" 
+									name="driverId" 
+									placeholder="Selecciona piloto si procede..."
+									options={driverOptions}
+								/>
+								<Input 
+									label="Escudería Involucrada (Opcional)" 
+									type="select" 
+									name="teamId" 
+									placeholder="Selecciona escudería si procede..."
+									options={teamOptions}
+								/>
+								<Input 
+									label="Gravedad de la Falta" 
+									type="select" 
+									name="severity" 
+									options={severityOptions}
+									required 
+								/>
+								<Input 
+									label="Descripción de la Falta / Hechos" 
+									type="textarea" 
+									name="description" 
+									placeholder="Detalla los hechos deportivos acaecidos..." 
+									required 
+								/>
+								<Button type="submit" variant="primary" size="sm" id="open-case-btn" class="w-full mt-2">
+									Abrir Expediente
+								</Button>
+							</form>
+						</Card>
+					</div>
+
+					<!-- Disciplinary Files List -->
+					<div class="lg:col-span-2 flex flex-col gap-4">
+						<div class="flex items-center gap-3">
+							<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+							<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white">Expedientes Abiertos</h2>
+						</div>
+
+						{filesList.length === 0 ? (
+							<Card class="text-center py-12 text-text-muted text-sm">
+								No hay expedientes disciplinarios abiertos actualmente.
+							</Card>
+						) : (
+							<div class="flex flex-col gap-4 max-h-[700px] overflow-y-auto pr-1">
+								{filesList.map((file: any) => (
+									<Card class="bg-slate-dark/50 border-slate-border text-xs" data-file-id={file.id}>
+										<div class="flex justify-between items-center border-b border-slate-border/50 pb-2 mb-3">
+											<div>
+												<span class="font-bold text-white font-mono">{file.id}</span>
+												<StatusBadge status={file.severity} class="ml-2 text-[9px]" />
+											</div>
+											<StatusBadge status={file.status} class="text-[9px]" />
+										</div>
+
+										<p class="text-text-secondary mb-4 font-mono leading-normal">{file.description}</p>
+										
+										<div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-[10px] text-text-muted mb-4 border-t border-slate-border/20 pt-3">
+											<div>Piloto: <span class="text-white font-bold">{file.driverId || 'N/A'}</span></div>
+											<div>Escudería: <span class="text-white font-bold">{file.teamId || 'N/A'}</span></div>
+											<div>Creado: <span class="text-white font-mono">{new Date(file.createdAt).toLocaleDateString()}</span></div>
+										</div>
+
+										{file.status === 'OPEN' && (
+											<form class="resolve-case-form flex flex-col gap-3 border-t border-slate-border/30 pt-4 mt-2">
+												<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+													<Input 
+														label="Multa Deportiva ($)" 
+														type="number" 
+														name="fineAmount" 
+														value="0" 
+													/>
+													<Input 
+														label="Puntos Retirados" 
+														type="number" 
+														name="pointsDocked" 
+														value="0" 
+													/>
+													<Input 
+														label="Días Suspensión Licencia" 
+														type="number" 
+														name="licenseSuspensionDays" 
+														value="0" 
+													/>
+												</div>
+												<Input 
+													label="Texto de la Resolución del Comité" 
+													type="text" 
+													name="resolutionText" 
+													placeholder="Indica la sanción impuesta y los hechos probados..."
+													required 
+												/>
+												<Button type="submit" variant="primary" size="sm" class="self-end resolve-btn">
+													Resolver Sanción
+												</Button>
+											</form>
+										)}
+
+										{file.status !== 'OPEN' && (
+											<div class="bg-slate-black/35 rounded-lg p-3 border border-slate-border/50 text-[11px] text-text-muted font-mono leading-relaxed mt-2">
+												<span class="text-white font-bold uppercase block mb-1">Resolución Comité:</span>
+												{file.resolutionText}<br/>
+												<span class="block mt-1">Multa: ${file.fineAmount} | Puntos dock: {file.pointsDocked} | Suspensión: {file.licenseSuspensionDays} días</span>
+											</div>
+										)}
+									</Card>
+								))}
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+
+			<!-- 2. DIRECTOR GENERAL VIEW: Appeals Resolver -->
+			{isDirectorGen && (
+				<div class="flex flex-col gap-4 border-t border-slate-border/30 pt-8 mt-4">
+					<div class="flex items-center gap-3">
+						<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+						<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white">Recursos de Apelación (Director General)</h2>
+					</div>
+
+					{appealsList.length === 0 ? (
+						<Card class="text-center py-10 text-text-muted text-sm">
+							No hay recursos de apelación en trámite.
+						</Card>
+					) : (
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{appealsList.map((appeal: any) => (
+								<Card class="bg-slate-dark/50 border-slate-border text-xs" data-appeal-id={appeal.id}>
+									<div class="flex justify-between items-center border-b border-slate-border/50 pb-2 mb-3">
+										<div>
+											<span class="font-bold text-white font-mono">{appeal.id}</span>
+											<span class="text-text-muted ml-2">Exp: {appeal.fileId}</span>
+										</div>
+										<StatusBadge status={appeal.status} class="text-[9px]" />
+									</div>
+
+									<p class="text-text-secondary leading-normal font-mono mb-4">
+										<strong>Justificación del Corredor:</strong><br/>
+										{appeal.justification}
+									</p>
+
+									{appeal.status === 'PENDING' ? (
+										<form class="resolve-appeal-form flex flex-col gap-3 border-t border-slate-border/30 pt-4 mt-2">
+											<Input 
+												label="Motivos de la Resolución Final" 
+												type="text" 
+												name="resolutionText" 
+												placeholder="Argumentación del Director General..."
+												required 
+											/>
+											
+											<div class="flex justify-end gap-2">
+												<Button type="button" variant="danger" size="sm" class="reject-appeal-btn">
+													Denegar Apelación
+												</Button>
+												<Button type="button" variant="primary" size="sm" class="accept-appeal-btn bg-emerald-600 hover:bg-emerald-500 shadow-none">
+													Aceptar (Revocar Sanción)
+												</Button>
+											</div>
+										</form>
+									) : (
+										<div class="bg-slate-black/35 rounded-lg p-3 border border-slate-border/50 text-[11px] text-text-muted font-mono leading-relaxed mt-2">
+											<span class="text-white font-bold uppercase block mb-1">Fallo de Dirección General:</span>
+											{appeal.resolutionText}
+										</div>
+									)}
+								</Card>
+							))}
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		// Handle Opening Disciplinary Case
+		const openForm = document.getElementById('open-case-form') as HTMLFormElement;
+		const openBtn = document.getElementById('open-case-btn');
+
+		if (openForm) {
+			openForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				if (openBtn) {
+					openBtn.setAttribute('disabled', 'true');
+					openBtn.textContent = 'Abriendo...';
+				}
+
+				const formData = new FormData(openForm);
+				const payload = {
+					driverId: formData.get('driverId') || null,
+					teamId: formData.get('teamId') || null,
+					severity: formData.get('severity'),
+					description: formData.get('description')
+				};
+
+				try {
+					const res = await fetch('/api/admin/discipline/expedientes', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(payload)
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert('Expediente sancionador abierto.');
+						window.location.reload();
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error al abrir expediente.'));
+						if (openBtn) {
+							openBtn.removeAttribute('disabled');
+							openBtn.textContent = 'Abrir Expediente';
+						}
+					}
+				} catch (err) {
+					console.error('Error opening case:', err);
+					alert('Error de conexión.');
+					if (openBtn) {
+						openBtn.removeAttribute('disabled');
+						openBtn.textContent = 'Abrir Expediente';
+					}
+				}
+			});
+		}
+
+		// Handle Sancion Resolution
+		const files = document.querySelectorAll('[data-file-id]');
+		files.forEach(card => {
+			const fileId = card.getAttribute('data-file-id');
+			const resolveForm = card.querySelector('.resolve-case-form') as HTMLFormElement;
+			const resolveBtn = card.querySelector('.resolve-btn');
+
+			if (resolveForm && fileId && resolveBtn) {
+				resolveForm.addEventListener('submit', async (e) => {
+					e.preventDefault();
+					if (!confirm(`¿Deseas formalizar la resolución del expediente ${fileId}?`)) return;
+
+					resolveBtn.setAttribute('disabled', 'true');
+					resolveBtn.textContent = 'Resolviendo...';
+
+					const formData = new FormData(resolveForm);
+					const payload = {
+						resolutionText: formData.get('resolutionText'),
+						fineAmount: parseFloat(formData.get('fineAmount') as string || '0'),
+						pointsDocked: parseInt(formData.get('pointsDocked') as string || '0'),
+						licenseSuspensionDays: parseInt(formData.get('licenseSuspensionDays') as string || '0')
+					};
+
+					try {
+						const res = await fetch(`/api/admin/discipline/expedientes/${fileId}/resolve`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(payload)
+						});
+
+						const data = await res.json();
+						if (data.success) {
+							alert(data.message || 'Expediente sancionador resuelto.');
+							window.location.reload();
+						} else {
+							alert('Error: ' + (data.error?.message || 'Error al resolver sanción.'));
+							resolveBtn.removeAttribute('disabled');
+							resolveBtn.textContent = 'Resolver Sanción';
+						}
+					} catch (err) {
+						console.error('Error resolving case:', err);
+						alert('Error de conexión.');
+						resolveBtn.removeAttribute('disabled');
+						resolveBtn.textContent = 'Resolver Sanción';
+					}
+				});
+			}
+		});
+
+		// Handle Appeal Resolution (Director General)
+		const appeals = document.querySelectorAll('[data-appeal-id]');
+		appeals.forEach(card => {
+			const appealId = card.getAttribute('data-appeal-id');
+			const acceptBtn = card.querySelector('.accept-appeal-btn');
+			const rejectBtn = card.querySelector('.reject-appeal-btn');
+			const resolutionForm = card.querySelector('.resolve-appeal-form') as HTMLFormElement;
+
+			if (resolutionForm && appealId) {
+				const resolveAppeal = async (status: 'ACCEPTED' | 'REJECTED', btn: any) => {
+					const reasonInput = resolutionForm.querySelector('input[name="resolutionText"]') as HTMLInputElement;
+					const reason = reasonInput.value.trim();
+
+					if (!reason) {
+						alert('Debe justificar la resolución final de la apelación.');
+						reasonInput.focus();
+						return;
+					}
+
+					if (!confirm(`¿Deseas resolver la apelación como ${status === 'ACCEPTED' ? 'ACEPTADA (Revocar Sanciones)' : 'RECHAZADA (Mantener)'}?`)) return;
+
+					btn.setAttribute('disabled', 'true');
+					
+					try {
+						const res = await fetch(`/api/admin/discipline/appeals/${appealId}/resolve`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ status, resolutionText: reason })
+						});
+
+						const data = await res.json();
+						if (data.success) {
+							alert('Apelación resuelta.');
+							window.location.reload();
+						} else {
+							alert('Error: ' + (data.error?.message || 'Error al resolver apelación.'));
+							btn.removeAttribute('disabled');
+						}
+					} catch (err) {
+						console.error('Error resolving appeal:', err);
+						alert('Error de conexión.');
+						btn.removeAttribute('disabled');
+					}
+				};
+
+				if (acceptBtn) {
+					acceptBtn.addEventListener('click', () => resolveAppeal('ACCEPTED', acceptBtn));
+				}
+				if (rejectBtn) {
+					rejectBtn.addEventListener('click', () => resolveAppeal('REJECTED', rejectBtn));
+				}
+			}
+		});
+	});
+</script>

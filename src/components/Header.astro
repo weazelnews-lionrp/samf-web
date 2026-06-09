@@ -2,6 +2,8 @@
 import { SITE_CONFIG, ASSETS } from '@/constants/Site'
 import { NAVIGATION_LINKS } from '@/constants/Navigation'
 import CircleUserRound from '@lucide/astro/icons/circle-user-round'
+
+const { user, character } = Astro.locals
 ---
 
 <header class="fixed top-0 left-0 right-0 h-30 md:h-26 z-50 bg-slate-dark/90 backdrop-blur-md border-b border-slate-border flex items-center transition-colors duration-200 font-racing tracking-[0.08em]">
@@ -52,15 +54,48 @@ import CircleUserRound from '@lucide/astro/icons/circle-user-round'
             ))}
         </nav>
 
-		<!-- Right Side / Private Area (Desktop) -->
-		<div class="hidden md:flex items-center gap-4 shrink-0 border-white/70 border-l-2 pl-10">
-			<a 
-				href="/account" 
-				class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark text-white text-sm transition-all duration-200 shadow-md shadow-brand-red/10 hover:shadow-brand-red/20 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-			>
-				<CircleUserRound />
-				Área Privada
-			</a>
+		<!-- Right Side / Private Area & Language Selector (Desktop) -->
+		<div class="hidden md:flex items-center gap-4 shrink-0">
+
+			<!-- Divider -->
+			<div class="h-6 w-px bg-slate-border"></div>
+
+			{user ? (
+				character ? (
+					<div class="flex items-center gap-3">
+						<a 
+							href={user.role.startsWith('STAFF_') ? '/admin/requests' : '/private/dashboard'} 
+							class="flex flex-col text-right group focus:outline-none"
+						>
+							<span class="text-xs text-white group-hover:text-brand-red transition-colors font-bold">{character.name}</span>
+							<span class="text-[9px] text-text-muted uppercase tracking-wider">{user.role}</span>
+						</a>
+						<a 
+							href="/api/auth/logout" 
+							class="p-2 rounded-lg bg-slate-gray hover:bg-red-950/20 text-text-muted hover:text-red-400 border border-slate-border transition-all duration-200"
+							title="Cerrar Sesión"
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+						</a>
+					</div>
+				) : (
+					<a 
+						href="/account" 
+						class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark text-white text-sm transition-all duration-200 font-bold uppercase"
+					>
+						<CircleUserRound class="w-4 h-4" />
+						ELEGIR PERSONAJE
+					</a>
+				)
+			) : (
+				<a 
+					href="/account" 
+					class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark text-white text-sm transition-all duration-200 shadow-md shadow-brand-red/10 hover:shadow-brand-red/20 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white font-bold uppercase"
+				>
+					<CircleUserRound class="w-4 h-4" />
+					ÁREA DEPORTIVA
+				</a>
+			)}
 		</div>
 
 		<!-- Mobile Controls (Hamburger button, right-aligned next to logo on mobile) -->
@@ -121,14 +156,47 @@ import CircleUserRound from '@lucide/astro/icons/circle-user-round'
 				)
 			))}
 		</nav>
-		<div class="mt-4 pt-4 border-t border-slate-border">
-			<a 
-				href="/account" 
-				class="flex items-center w-full text-center px-4 py-3 rounded-lg bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark text-white transition-colors duration-200"
-			>
-				<CircleUserRound />
-				Área Privada
-			</a>
+		<div class="mt-4 pt-4 border-t border-slate-border flex flex-col gap-4">
+			{user ? (
+				character ? (
+					<div class="flex flex-col gap-3">
+						<div class="flex flex-col px-2">
+							<span class="text-sm text-white font-bold">{character.name}</span>
+							<span class="text-xs text-text-muted uppercase tracking-wider">{user.role}</span>
+						</div>
+						<div class="grid grid-cols-2 gap-2">
+							<a 
+								href={user.role.startsWith('STAFF_') ? '/admin/requests' : '/private/dashboard'} 
+								class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-gray text-white text-center text-xs font-bold uppercase"
+							>
+								Mi Panel
+							</a>
+							<a 
+								href="/api/auth/logout" 
+								class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-950/20 border border-red-500/30 text-red-400 text-center text-xs font-bold uppercase"
+							>
+								Salir
+							</a>
+						</div>
+					</div>
+				) : (
+					<a 
+						href="/account" 
+						class="flex items-center justify-center gap-2 w-full text-center px-4 py-3 rounded-lg bg-brand-red text-white font-bold uppercase text-sm"
+					>
+						<CircleUserRound />
+						ELEGIR PERSONAJE
+					</a>
+				)
+			) : (
+				<a 
+					href="/account" 
+					class="flex items-center justify-center gap-2 w-full text-center px-4 py-3 rounded-lg bg-brand-red text-white font-bold uppercase text-sm"
+				>
+					<CircleUserRound />
+					ÁREA DEPORTIVA
+				</a>
+			)}
 		</div>
 	</div>
 </div>

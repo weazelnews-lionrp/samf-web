@@ -1,0 +1,116 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+import Input from '@/components/ui/Input.astro'
+
+const search = Astro.url.searchParams.get('search') || ''
+
+// Fetch from API
+const apiUrl = new URL('/api/drivers', Astro.url)
+if (search) {
+	apiUrl.searchParams.set('search', search)
+}
+
+let drivers = []
+try {
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		drivers = data.drivers
+	}
+} catch (err) {
+	console.error('Error fetching drivers from API:', err)
+}
+---
+
+<Layout title="Directorio de Pilotos | SAMF" description="Catálogo y registro oficial de pilotos inscritos en la San Andreas Motorsports Federation (SAMF).">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Page Header -->
+		<div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+			<div>
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-8 h-[3px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-3xl font-extrabold uppercase tracking-wider font-racing text-white">Directorio de Pilotos</h1>
+				</div>
+				<p class="text-sm text-text-muted max-w-xl">
+					Consulta la relación oficial de todos los pilotos profesionales inscritos en la Liga de San Andreas (Art. 6.2 y 15.2c).
+				</p>
+			</div>
+			
+			<!-- Search Form -->
+			<form method="GET" class="flex items-center gap-2 w-full md:w-80">
+				<Input 
+					type="text" 
+					name="search" 
+					placeholder="Buscar piloto..." 
+					value={search}
+				/>
+				<Button type="submit" variant="primary">
+					Buscar
+				</Button>
+			</form>
+		</div>
+
+		{drivers.length === 0 ? (
+			<Card class="text-center py-16">
+				<p class="text-text-muted mb-4">No se encontraron pilotos registrados o que coincidan con la búsqueda.</p>
+				{search && (
+					<Button href="/drivers" variant="outline" size="sm">
+						Limpiar búsqueda
+					</Button>
+				)}
+			</Card>
+		) : (
+			<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+				{drivers.map((driver: any) => (
+					<Card hoverable glow={driver.isRookie} class="flex flex-col justify-between text-center">
+						<div class="flex flex-col items-center">
+							<!-- Photo -->
+							<div class="relative mb-4">
+								{driver.photo ? (
+									<img 
+										src={driver.photo} 
+										alt={driver.name} 
+										class="w-24 h-24 rounded-full object-cover border border-slate-border shadow-lg"
+									/>
+								) : (
+									<div class="w-24 h-24 rounded-full bg-slate-gray/50 flex items-center justify-center text-text-muted font-bold text-2xl border border-slate-border">
+										{driver.name.charAt(0)}
+									</div>
+								)}
+								{driver.isRookie && (
+									<span class="absolute -bottom-1 -right-1 bg-brand-red text-white text-[8px] font-racing font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase border border-slate-black">
+										ROOKIE
+									</span>
+								)}
+							</div>
+
+							<!-- Bio info -->
+							<h2 class="text-base font-bold text-white font-racing leading-tight mb-1">{driver.name}</h2>
+							<p class="text-xs text-text-muted mb-3 font-medium">
+								{driver.teamName || 'Agente Libre'}
+							</p>
+							
+							<!-- License status -->
+							<div class="mb-4">
+								<StatusBadge status={driver.licenseStatus} class="text-[9px]" />
+							</div>
+						</div>
+
+						<div class="border-t border-slate-border/50 pt-4 mt-2">
+							<div class="flex justify-between items-center mb-4 text-xs">
+								<span class="text-text-muted font-racing uppercase tracking-wider">Puntos:</span>
+								<span class="font-extrabold text-white font-racing">{driver.points} pts</span>
+							</div>
+							<Button href={`/drivers/${driver.id}`} variant="outline" size="sm" class="w-full text-center">
+								Ver Estadísticas
+							</Button>
+						</div>
+					</Card>
+				))}
+			</div>
+		)}
+	</div>
+</Layout>

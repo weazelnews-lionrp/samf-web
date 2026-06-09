@@ -1,0 +1,180 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+// Role restriction
+if (user.role !== 'DIRECTOR_ESCUDERIA' && user.role !== 'STAFF_ADMIN' && user.role !== 'STAFF_DIRECTOR_GENERAL') {
+	return Astro.redirect('/private/dashboard')
+}
+
+// 1. Fetch user profile to find directed team ID
+let teamId = null
+try {
+	const profileUrl = new URL('/api/user/profile', Astro.url)
+	const res = await fetch(profileUrl, {
+		headers: { Cookie: Astro.request.headers.get('cookie') || '' }
+	})
+	const data = await res.json()
+	if (data.success) {
+		teamId = data.associatedEntity?.id
+	}
+} catch (err) {
+	console.error('Error fetching profile in bulletins:', err)
+}
+
+// 2. Fetch bulletins if teamId exists
+let bulletinsList = []
+if (teamId) {
+	try {
+		const teamUrl = new URL(`/api/teams/${teamId}`, Astro.url)
+		const res = await fetch(teamUrl)
+		const data = await res.json()
+		if (data.success) {
+			bulletinsList = data.team?.bulletins || []
+		}
+	} catch (err) {
+		console.error('Error fetching bulletins in my-team:', err)
+	}
+}
+---
+
+<Layout title="Boletines de Escudería | SAMF" description="Publica comunicados de prensa y novedades oficiales de tu escudería en el portal.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/team/bulletins" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			{teamId ? (
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+					<!-- Create Bulletin Form (Column 1-2) -->
+					<div class="lg:col-span-2 flex flex-col gap-6">
+						<Card glow>
+							<div class="flex items-center gap-3 mb-2 border-b border-slate-border/50 pb-3">
+								<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+								<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Publicar Boletín Oficial de Escudería</h1>
+							</div>
+							
+							<p class="text-xs text-text-muted mb-6">
+								Redacta comunicados oficiales (ej. fichaje de pilotos, renovaciones, novedades del coche) para que aparezcan en la ficha pública del equipo.
+							</p>
+
+							<form id="team-bulletin-form" class="flex flex-col gap-4">
+								<Input 
+									label="Título del Boletín" 
+									type="text" 
+									name="title" 
+									placeholder="Ej. Grotti Racing anuncia la incorporación de un nuevo piloto titular..." 
+									required 
+								/>
+								<Input 
+									label="Cuerpo del Comunicado (Soporta formato HTML/Texto)" 
+									type="textarea" 
+									name="content" 
+									rows={8}
+									placeholder="Escribe aquí el texto oficial de prensa..." 
+									required 
+								/>
+								<Button type="submit" variant="primary" id="pub-btn" class="self-end mt-2">
+									Publicar Boletín
+								</Button>
+							</form>
+						</Card>
+					</div>
+
+					<!-- Bulletins List History (Column 3) -->
+					<div class="lg:col-span-1 flex flex-col gap-6">
+						<div class="flex items-center gap-3">
+							<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+							<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white">Historial de Comunicados</h2>
+						</div>
+
+						<Card class="bg-slate-dark/30 max-h-[500px] overflow-y-auto flex flex-col gap-4">
+							{bulletinsList.length === 0 ? (
+								<p class="text-xs text-text-muted italic text-center py-4">No se han publicado comunicados todavía.</p>
+							) : (
+								bulletinsList.map((bull: any) => (
+									<div class="border-b border-slate-border/40 pb-3 last:border-0 last:pb-0">
+										<h3 class="text-xs font-bold text-white leading-snug mb-1">{bull.title}</h3>
+										<span class="text-[9px] text-text-muted font-mono block mb-2">
+											{new Date(bull.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+										</span>
+										<div class="text-[10px] text-text-secondary line-clamp-3 leading-normal">
+											<Fragment set:html={bull.content} />
+										</div>
+									</div>
+								))
+							)}
+						</Card>
+					</div>
+				</div>
+			) : (
+				<Card class="text-center py-16 text-text-muted">
+					No se encontró ninguna escudería asociada a este Director. Realiza el trámite de inscripción de escudería primero.
+				</Card>
+			)}
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const form = document.getElementById('team-bulletin-form') as HTMLFormElement;
+		const pubBtn = document.getElementById('pub-btn');
+
+		if (form) {
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				if (pubBtn) {
+					pubBtn.setAttribute('disabled', 'true');
+					pubBtn.textContent = 'Publicando...';
+				}
+
+				const formData = new FormData(form);
+				const payload = {
+					title: formData.get('title'),
+					content: formData.get('content')
+				};
+
+				try {
+					const res = await fetch('/api/private/team/bulletins', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(payload)
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Boletín publicado exitosamente.');
+						window.location.reload();
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error desconocido al publicar boletín.'));
+						if (pubBtn) {
+							pubBtn.removeAttribute('disabled');
+							pubBtn.textContent = 'Publicar Boletín';
+						}
+					}
+				} catch (err) {
+					console.error('Error publishing bulletin:', err);
+					alert('Error de conexión.');
+					if (pubBtn) {
+						pubBtn.removeAttribute('disabled');
+						pubBtn.textContent = 'Publicar Boletín';
+					}
+				}
+			});
+		}
+	});
+</script>

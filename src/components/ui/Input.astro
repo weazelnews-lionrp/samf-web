@@ -1,0 +1,102 @@
+---
+interface Props {
+	label?: string
+	type?: 'text' | 'number' | 'email' | 'password' | 'select' | 'textarea' | 'checkbox' | 'file' | 'color'
+	name: string
+	id?: string
+	placeholder?: string
+	value?: any
+	required?: boolean
+	options?: { value: string; label: string }[]
+	accept?: string
+	rows?: number
+	class?: string
+	inputClass?: string
+	[key: string]: any
+}
+
+const {
+	label,
+	type = 'text',
+	name,
+	id = name,
+	placeholder,
+	value,
+	required = false,
+	options = [],
+	accept,
+	rows = 4,
+	class: className = '',
+	inputClass = '',
+	...rest
+} = Astro.props
+
+const labelStyles = 'block text-xs font-semibold tracking-wider text-text-muted uppercase mb-1.5 font-racing'
+const commonInputStyles = 'w-full bg-slate-gray/50 border border-slate-border rounded-lg px-4 py-2.5 text-white placeholder:text-text-muted/50 focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all duration-200 text-sm'
+const fileStyles = 'file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-red file:text-white hover:file:bg-brand-red-light file:cursor-pointer'
+const checkboxStyles = 'h-4 w-4 rounded border-slate-border text-brand-red focus:ring-brand-red focus:ring-offset-slate-black bg-slate-gray/50'
+
+const isCheckbox = type === 'checkbox'
+---
+
+<div class={`flex flex-col w-full ${className}`}>
+	{label && !isCheckbox && (
+		<label for={id} class={labelStyles}>
+			{label} {required && <span class="text-brand-red">*</span>}
+		</label>
+	)}
+
+	{type === 'select' ? (
+		<select
+			name={name}
+			id={id}
+			required={required}
+			class={`${commonInputStyles} ${inputClass}`}
+			{...rest}
+		>
+			{placeholder && <option value="" disabled selected={value === undefined}>{placeholder}</option>}
+			{options.map((opt) => (
+				<option value={opt.value} selected={value === opt.value}>
+					{opt.label}
+				</option>
+			))}
+		</select>
+	) : type === 'textarea' ? (
+		<textarea
+			name={name}
+			id={id}
+			placeholder={placeholder}
+			required={required}
+			rows={rows}
+			class={`${commonInputStyles} ${inputClass}`}
+			{...rest}
+		>{value}</textarea>
+	) : isCheckbox ? (
+		<label class="inline-flex items-center gap-3 cursor-pointer py-1 select-none">
+			<input
+				type="checkbox"
+				name={name}
+				id={id}
+				required={required}
+				checked={!!value}
+				class={`${checkboxStyles} ${inputClass}`}
+				{...rest}
+			/>
+			<span class="text-sm text-text-secondary select-none">
+				{label} {required && <span class="text-brand-red">*</span>}
+			</span>
+		</label>
+	) : (
+		<input
+			type={type}
+			name={name}
+			id={id}
+			value={value}
+			placeholder={placeholder}
+			required={required}
+			accept={accept}
+			class={`${commonInputStyles} ${type === 'file' ? fileStyles : ''} ${inputClass}`}
+			{...rest}
+		/>
+	)}
+</div>

@@ -1,0 +1,164 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+
+const { driverId } = Astro.params
+
+// Fetch from API
+const apiUrl = new URL(`/api/drivers/${driverId}`, Astro.url)
+let driver = null
+let errorMsg = ''
+
+try {
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		driver = data.driver
+	} else {
+		errorMsg = data.error?.message || 'Piloto no encontrado.'
+	}
+} catch (err) {
+	console.error('Error fetching driver detail:', err)
+	errorMsg = 'Error al recuperar los detalles del piloto.'
+}
+
+if (!driver) {
+	return Astro.redirect('/drivers')
+}
+---
+
+<Layout title={`${driver.name} | SAMF`} description={`Perfil de piloto y estadísticas de carrera de ${driver.name} en la SAMF.`}>
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Back Button -->
+		<div class="mb-6">
+			<Button href="/drivers" variant="outline" size="sm" class="flex items-center gap-2">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+				Volver al Directorio
+			</Button>
+		</div>
+
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<!-- Personal Info Card (Column 1) -->
+			<div class="lg:col-span-1 flex flex-col gap-6">
+				<Card glow={driver.isRookie} class="text-center flex flex-col items-center">
+					<!-- Photo -->
+					<div class="relative mb-6">
+						{driver.photo ? (
+							<img 
+								src={driver.photo} 
+								alt={driver.name} 
+								class="w-32 h-32 rounded-full object-cover border border-slate-border shadow-xl bg-slate-black"
+							/>
+						) : (
+							<div class="w-32 h-32 rounded-full bg-slate-gray/50 flex items-center justify-center text-text-muted font-bold text-3xl border border-slate-border">
+								{driver.name.charAt(0)}
+							</div>
+						)}
+						{driver.isRookie && (
+							<span class="absolute -bottom-1 -right-1 bg-brand-red text-white text-[9px] font-racing font-extrabold px-2.5 py-0.5 rounded tracking-wide uppercase border border-slate-black">
+								NOVEL / ROOKIE
+							</span>
+						)}
+					</div>
+
+					<!-- Name & Team -->
+					<h1 class="text-2xl font-extrabold font-racing text-white leading-tight mb-1">{driver.name}</h1>
+					
+					{driver.team ? (
+						<a 
+							href={`/teams/${driver.team.id}`}
+							class="text-sm text-brand-red hover:underline font-racing uppercase tracking-wider font-bold mb-4 block"
+						>
+							{driver.team.name}
+						</a>
+					) : (
+						<p class="text-sm text-text-muted mb-4 font-racing uppercase tracking-wider">Piloto Sin Escudería</p>
+					)}
+
+					<div class="flex items-center gap-2 mb-6">
+						<StatusBadge status={driver.licenseStatus} />
+					</div>
+
+					<!-- Metadata -->
+					<div class="w-full border-t border-slate-border/50 pt-4 text-left flex flex-col gap-3 text-xs">
+						<div class="flex justify-between">
+							<span class="text-text-muted">Nacionalidad:</span>
+							<span class="text-white font-medium">{driver.nationality || 'N/A'}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-text-muted">ID de Licencia:</span>
+							<span class="text-white font-mono font-medium">{driver.id}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-text-muted">Expiración de Licencia:</span>
+							<span class="text-white font-mono font-medium">
+								{driver.licenseExpiry ? new Date(driver.licenseExpiry).toLocaleDateString('es-ES') : 'No activa'}
+							</span>
+						</div>
+					</div>
+				</Card>
+
+				<!-- License Regulation Warning -->
+				<Card class="bg-slate-dark/30 border-slate-border/40 text-[10px] text-text-muted leading-relaxed">
+					<p class="mb-2 font-bold text-white uppercase tracking-wider">Aviso Legal (Art. 15):</p>
+					La tenencia de una Licencia SAMF Activa es condición imprescindible para rodar en Grandes Premios oficiales. Los pilotos suspendidos del Comité de Disciplina (Art. 18) quedan inhabilitados de manera temporal de toda carrera.
+				</Card>
+			</div>
+
+			<!-- Racing Career Stats (Column 2-3) -->
+			<div class="lg:col-span-2 flex flex-col gap-6">
+				<div class="flex items-center gap-3">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Palmarés y Estadísticas LSA</h2>
+				</div>
+
+				<!-- Stats Grid -->
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+					<Card class="bg-slate-dark/50 p-4 text-center border-slate-border/50">
+						<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block">Victorias</span>
+						<span class="text-3xl font-black text-white font-racing mt-1 block">{driver.stats.wins}</span>
+					</Card>
+					<Card class="bg-slate-dark/50 p-4 text-center border-slate-border/50">
+						<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block">Podios</span>
+						<span class="text-3xl font-black text-white font-racing mt-1 block">{driver.stats.podiums}</span>
+					</Card>
+					<Card class="bg-slate-dark/50 p-4 text-center border-slate-border/50">
+						<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block">Pole Positions</span>
+						<span class="text-3xl font-black text-white font-racing mt-1 block">{driver.stats.poles}</span>
+					</Card>
+					<Card class="bg-slate-dark/50 p-4 text-center border-slate-border/50">
+						<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block">Vueltas Rápidas</span>
+						<span class="text-3xl font-black text-white font-racing mt-1 block">{driver.stats.fastestLaps}</span>
+					</Card>
+				</div>
+
+				<!-- Performance summary -->
+				<Card class="p-6">
+					<h3 class="text-sm font-bold uppercase tracking-wider font-racing text-white mb-4">Resumen de Participación</h3>
+					
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+						<div class="flex flex-col gap-4">
+							<div class="flex justify-between border-b border-slate-border/50 pb-2">
+								<span class="text-text-muted">Carreras Completadas:</span>
+								<span class="text-white font-bold">{driver.stats.racesCompleted}</span>
+							</div>
+							<div class="flex justify-between border-b border-slate-border/50 pb-2">
+								<span class="text-text-muted">Puntos en Campeonato actual:</span>
+								<span class="text-white font-bold">{driver.points} pts</span>
+							</div>
+						</div>
+						
+						<div class="flex flex-col justify-center bg-slate-black/35 rounded-lg p-4 border border-slate-border/40 text-center md:text-left">
+							<span class="text-xs text-text-muted uppercase tracking-wider font-racing block mb-1">Rendimiento Histórico</span>
+							<p class="text-xs text-text-secondary leading-normal">
+								Con un total de {driver.stats.racesCompleted} participaciones oficiales, {driver.name} acumula un porcentaje de victorias del {driver.stats.racesCompleted > 0 ? Math.round((driver.stats.wins / driver.stats.racesCompleted) * 100) : 0}% y un {driver.stats.racesCompleted > 0 ? Math.round((driver.stats.podiums / driver.stats.racesCompleted) * 100) : 0}% de podios en la Liga Estatal de San Andreas.
+							</p>
+						</div>
+					</div>
+				</Card>
+			</div>
+		</div>
+	</div>
+</Layout>

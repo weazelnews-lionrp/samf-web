@@ -1,0 +1,69 @@
+---
+interface Props {
+	status: string
+	class?: string
+}
+
+const { status, class: className = '' } = Astro.props
+
+const getStyles = (val: string) => {
+	const upper = val.toUpperCase()
+
+	// Green/Success
+	if (['ACTIVE', 'APPROVED', 'RESOLVED', 'NEGATIVE', 'ACCEPTED', 'FINISHED'].includes(upper)) {
+		return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+	}
+
+	// Yellow/Warning
+	if (['PENDING', 'SCHEDULED', 'OPEN', 'PENDING_AUDIT', 'APPEALED'].includes(upper)) {
+		return 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+	}
+
+	// Red/Danger
+	if (['SUSPENDED', 'REJECTED', 'EXPIRED', 'CLOSED', 'POSITIVE', 'CANCELLED', 'DNF', 'DSQ', 'DNS', 'NONE'].includes(upper)) {
+		return 'bg-red-500/10 text-red-400 border border-red-500/20'
+	}
+
+	// Severity types
+	if (['LEVE'].includes(upper)) {
+		return 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+	}
+	if (['GRAVE'].includes(upper)) {
+		return 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+	}
+	if (['MUY_GRAVE', 'SUPERADMIN'].includes(upper)) {
+		return 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+	}
+
+	// Default grey
+	return 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+}
+
+const formatText = (val: string) => {
+	const map: Record<string, string> = {
+		PENDING: 'Pendiente',
+		APPROVED: 'Aprobado',
+		ACTIVE: 'Activo',
+		SUSPENDED: 'Suspendido',
+		REJECTED: 'Rechazado',
+		EXPIRED: 'Expirado',
+		RESOLVED: 'Resuelto',
+		CLOSED: 'Cerrado',
+		APPEALED: 'Apelado',
+		NEGATIVE: 'Negativo',
+		POSITIVE: 'Positivo',
+		LEVE: 'Leve',
+		GRAVE: 'Grave',
+		MUY_GRAVE: 'Muy Grave',
+		SCHEDULED: 'Programado',
+		FINISHED: 'Terminado',
+		NONE: 'Ninguno',
+		ACCEPTED: 'Aceptado',
+	}
+	return map[val.toUpperCase()] || val
+}
+---
+
+<span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide uppercase select-none ${getStyles(status)} ${className}`}>
+	{formatText(status)}
+</span>

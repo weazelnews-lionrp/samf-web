@@ -1,0 +1,155 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+// Role restriction (Only DIRECTOR_ESCUDERIA or STAFF_ADMIN)
+if (user.role !== 'DIRECTOR_ESCUDERIA' && user.role !== 'STAFF_ADMIN' && user.role !== 'STAFF_DIRECTOR_GENERAL') {
+	return Astro.redirect('/private/vehicles')
+}
+
+const categories = [
+	{ value: 'SUPERDEPORTIVOS', label: 'Superdeportivos' },
+	{ value: 'PRO_STOCK', label: 'Pro-Stock' },
+	{ value: 'FORMULA', label: 'Fórmula' },
+	{ value: 'RALLY', label: 'Rally' },
+	{ value: 'GT', label: 'Gran Turismo (GT)' }
+]
+---
+
+<Layout title="Inclusión de Vehículo | SAMF" description="Solicitar la adición de un nuevo modelo al Catálogo de Vehículos Autorizados de la SAMF (Art. 8.2).">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/vehicles" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Back Link -->
+			<div>
+				<Button href="/private/vehicles" variant="outline" size="sm" class="flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+					Volver a Vehículos
+				</Button>
+			</div>
+
+			<!-- Form Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2 border-b border-slate-border/50 pb-3">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Solicitar Inclusión de Modelo en Catálogo (Art. 8.2)</h1>
+				</div>
+				
+				<p class="text-xs text-text-muted mb-8 leading-relaxed">
+					Introduce los detalles técnicos del modelo de vehículo que deseas proponer para el catálogo autorizado. La administración emitirá resolución técnica en un plazo máximo de 15 días hábiles.
+				</p>
+
+				<form id="catalog-inclusion-form" class="flex flex-col gap-6">
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+						<Input 
+							label="Fabricante / Marca" 
+							type="text" 
+							name="brand" 
+							placeholder="Ej. Grotti, Pfister" 
+							required 
+						/>
+						<Input 
+							label="Modelo del Vehículo" 
+							type="text" 
+							name="model" 
+							placeholder="Ej. Itali GTO" 
+							required 
+						/>
+						<Input 
+							label="Categoría Homologada" 
+							type="select" 
+							name="category" 
+							placeholder="Elige una categoría..."
+							options={categories}
+							required 
+						/>
+					</div>
+
+					<Input 
+						label="Especificaciones Técnicas y Motor" 
+						type="textarea" 
+						name="technicalSpecs" 
+						placeholder="Ej. Motor trasero V12 atmosférico, tracción trasera, peso 1350kg..." 
+					/>
+
+					<div class="flex justify-end gap-3 mt-4 border-t border-slate-border/30 pt-6">
+						<Button type="button" variant="outline" href="/private/vehicles">
+							Cancelar
+						</Button>
+						<Button type="submit" variant="primary" id="submit-btn">
+							Enviar Solicitud
+						</Button>
+					</div>
+				</form>
+			</Card>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const form = document.getElementById('catalog-inclusion-form') as HTMLFormElement;
+		const submitBtn = document.getElementById('submit-btn');
+
+		if (form) {
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				if (submitBtn) {
+					submitBtn.setAttribute('disabled', 'true');
+					submitBtn.textContent = 'Enviando...';
+				}
+
+				const formData = new FormData(form);
+				const payload = {
+					brand: formData.get('brand'),
+					model: formData.get('model'),
+					category: formData.get('category'),
+					technicalSpecs: formData.get('technicalSpecs'),
+				};
+
+				try {
+					const res = await fetch('/api/private/vehicles/catalog-inclusion', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(payload)
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Trámite registrado correctamente.');
+						window.location.href = '/private/dashboard';
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error desconocido.'));
+						if (submitBtn) {
+							submitBtn.removeAttribute('disabled');
+							submitBtn.textContent = 'Enviar Solicitud';
+						}
+					}
+				} catch (err) {
+					console.error('Error submitting catalog inclusion:', err);
+					alert('Error de red en el servidor.');
+					if (submitBtn) {
+						submitBtn.removeAttribute('disabled');
+						submitBtn.textContent = 'Enviar Solicitud';
+					}
+				}
+			});
+		}
+	});
+</script>

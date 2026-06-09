@@ -1,0 +1,83 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+// Fetch notifications
+let notificationsList = []
+try {
+	const apiUrl = new URL('/api/private/notifications', Astro.url)
+	const res = await fetch(apiUrl, {
+		headers: { Cookie: Astro.request.headers.get('cookie') || '' }
+	})
+	const data = await res.json()
+	if (data.success) {
+		notificationsList = data.notifications || []
+	}
+} catch (err) {
+	console.error('Error fetching notifications:', err)
+}
+---
+
+<Layout title="Notificaciones Confidenciales | SAMF" description="Buzón seguro y confidencial de resoluciones y notificaciones deportivas de la SAMF.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/notifications" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Header Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Buzón de Notificaciones Confidenciales (Art. 16.9)</h1>
+				</div>
+				<p class="text-xs text-text-muted">
+					Canal seguro de tratamiento y comunicación de expedientes del Comité de Disciplina y analíticas de sustancias controladas.
+				</p>
+			</Card>
+
+			<!-- Notifications List -->
+			{notificationsList.length === 0 ? (
+				<Card class="text-center py-16 text-text-muted">
+					<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-open mx-auto mb-3 opacity-30"><path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"/><path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"/></svg>
+					No hay notificaciones o expedientes deportivos registrados en tu buzón actualmente.
+				</Card>
+			) : (
+				<div class="flex flex-col gap-4">
+					{notificationsList.map((notif: any) => (
+						<Card class="bg-slate-dark/50 border-l-4 border-l-brand-red">
+							<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-border/50 pb-2 mb-3">
+								<h3 class="text-sm font-bold text-white font-racing uppercase tracking-wider">{notif.title}</h3>
+								<div class="flex items-center gap-3">
+									{notif.confidential && (
+										<span class="text-[9px] bg-red-500/10 text-red-400 border border-red-500/25 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider font-racing">Confidencial</span>
+									)}
+									<span class="text-[10px] text-text-muted font-mono">
+										{new Date(notif.createdAt).toLocaleDateString('es-ES', {
+											day: '2-digit',
+											month: 'short',
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+									</span>
+								</div>
+							</div>
+							
+							<p class="text-xs text-text-secondary leading-relaxed font-mono whitespace-pre-line">
+								{notif.message}
+							</p>
+						</Card>
+					))}
+				</div>
+			)}
+		</div>
+	</div>
+</Layout>

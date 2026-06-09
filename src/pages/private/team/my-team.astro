@@ -1,0 +1,285 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+// Role restriction
+if (user.role !== 'DIRECTOR_ESCUDERIA' && user.role !== 'STAFF_ADMIN' && user.role !== 'STAFF_DIRECTOR_GENERAL') {
+	return Astro.redirect('/private/dashboard')
+}
+
+// 1. Fetch user profile to find directed team ID
+let teamId = null
+try {
+	const profileUrl = new URL('/api/user/profile', Astro.url)
+	const res = await fetch(profileUrl, {
+		headers: { Cookie: Astro.request.headers.get('cookie') || '' }
+	})
+	const data = await res.json()
+	if (data.success) {
+		teamId = data.associatedEntity?.id
+	}
+} catch (err) {
+	console.error('Error fetching profile in my-team:', err)
+}
+
+// 2. Fetch team details if teamId exists
+let teamDetails = null
+if (teamId) {
+	try {
+		const teamUrl = new URL(`/api/teams/${teamId}`, Astro.url)
+		const res = await fetch(teamUrl)
+		const data = await res.json()
+		if (data.success) {
+			teamDetails = data.team
+		}
+	} catch (err) {
+		console.error('Error fetching team details in my-team:', err)
+	}
+}
+---
+
+<Layout title="Gestión de Escudería | SAMF" description="Gestión de composición de plantilla y contratos mercantiles de patrocinio oficiales de tu escudería.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/team/my-team" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			{teamDetails ? (
+				<>
+					<!-- Team Header Card -->
+					<Card glow>
+						<div class="flex items-center gap-4">
+							{teamDetails.logo ? (
+								<img 
+									src={teamDetails.logo} 
+									alt={teamDetails.name} 
+									class="w-16 h-16 rounded-lg object-contain bg-slate-black/50 border border-slate-border p-1"
+								/>
+							) : (
+								<div class="w-16 h-16 rounded-lg bg-slate-gray/50 flex items-center justify-center font-bold text-lg">
+									{teamDetails.name.charAt(0)}
+								</div>
+							)}
+							<div>
+								<span class="text-[10px] text-text-muted font-racing uppercase tracking-wider block">Panel de Dirección</span>
+								<h1 class="text-xl font-bold font-racing text-white uppercase tracking-wider">{teamDetails.name}</h1>
+								<p class="text-xs text-text-muted mt-0.5">Estado: <span class="text-white uppercase font-bold">{teamDetails.status}</span></p>
+							</div>
+						</div>
+					</Card>
+
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+						<!-- Driver Lineup management (Column 1) -->
+						<Card>
+							<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white mb-2 border-b border-slate-border/50 pb-2 flex items-center gap-2">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-red"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+								Composición de Pilotos (Art. 13)
+							</h2>
+							<p class="text-xs text-text-muted mb-6 leading-normal">
+								Modifica la relación de pilotos titulares. Tienes un plazo de 7 días hábiles para notificar cambios en la plantilla (Art. 13.3).
+							</p>
+
+							<!-- Form for composition -->
+							<form id="team-composition-form" class="flex flex-col gap-4">
+								<Input 
+									label="Lista de Pilotos (IDs de ciudadano, separados por coma)" 
+									type="text" 
+									name="driversInput" 
+									value={teamDetails.drivers.map((d: any) => d.id).join(', ')}
+									placeholder="Ej. citizenid1, citizenid2" 
+									required
+								/>
+								<div class="text-[10px] text-text-muted italic leading-normal mb-2">
+									* Al guardar, se desvinculará a los pilotos anteriores y se asignará la escudería a los indicados. Si no tienen perfil deportivo, se les creará uno provisional.
+								</div>
+								<Button type="submit" variant="primary" size="sm" class="self-end" id="save-comp-btn">
+									Guardar Composición
+								</Button>
+							</form>
+						</Card>
+
+						<!-- Sponsorship contracts (Column 2) -->
+						<Card class="flex flex-col justify-between">
+							<div>
+								<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white mb-2 border-b border-slate-border/50 pb-2 flex items-center gap-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-red"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+									Registro de Patrocinios (Art. 14)
+								</h2>
+								<p class="text-xs text-text-muted mb-6 leading-normal">
+									Registra nuevos contratos de patrocinio mercantil. Es requisito declarar la ausencia de deudas con la administración pública (Art. 14.2).
+								</p>
+
+								<!-- Current sponsors list -->
+								<div class="mb-6">
+									<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block mb-2">Patrocinadores Registrados</span>
+									{teamDetails.sponsors.length === 0 ? (
+										<p class="text-xs text-text-muted italic">Sin patrocinadores oficiales activos.</p>
+									) : (
+										<div class="flex flex-wrap gap-2">
+											{teamDetails.sponsors.map((s: string) => (
+												<span class="bg-slate-gray/30 border border-slate-border text-xs px-2.5 py-1 rounded text-white font-mono font-medium">
+													{s}
+												</span>
+											))}
+										</div>
+									)}
+								</div>
+
+								<!-- Add sponsor form -->
+								<form id="team-sponsor-form" class="flex flex-col gap-4 border-t border-slate-border/30 pt-4">
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<Input 
+											label="Nombre Empresa" 
+											type="text" 
+											name="companyName" 
+											placeholder="Ej. Maze Bank" 
+											required 
+										/>
+										<Input 
+											label="Registro Mercantil / CIF" 
+											type="text" 
+											name="taxId" 
+											placeholder="Ej. B-998822" 
+											required 
+										/>
+									</div>
+									<Input 
+										label="Declaro bajo juramento de ausencia de deudas fiscales de la mercantil con la administración." 
+										type="checkbox" 
+										name="declarationNoDebt" 
+										required 
+									/>
+									<Button type="submit" variant="primary" size="sm" class="self-end" id="save-spons-btn">
+										Registrar Contrato
+									</Button>
+								</form>
+							</div>
+						</Card>
+					</div>
+				</>
+			) : (
+				<Card class="text-center py-16 text-text-muted">
+					No se encontró ninguna escudería asociada a este Director. Realiza el trámite de inscripción de escudería primero.
+				</Card>
+			)}
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const compForm = document.getElementById('team-composition-form') as HTMLFormElement;
+		const compBtn = document.getElementById('save-comp-btn');
+		const sponsForm = document.getElementById('team-sponsor-form') as HTMLFormElement;
+		const sponsBtn = document.getElementById('save-spons-btn');
+
+		if (compForm) {
+			compForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				if (compBtn) {
+					compBtn.setAttribute('disabled', 'true');
+					compBtn.textContent = 'Guardando...';
+				}
+
+				const formData = new FormData(compForm);
+				const driversInput = formData.get('driversInput') as string;
+				const driversList = (driversInput || '')
+					.split(',')
+					.map(d => d.trim())
+					.filter(Boolean)
+					.map(id => ({ driverId: id, role: 'TITULAR' }));
+
+				try {
+					const res = await fetch('/api/private/team/composition', {
+						method: 'PUT',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ driversList })
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Composición actualizada.');
+						window.location.reload();
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error desconocido.'));
+						if (compBtn) {
+							compBtn.removeAttribute('disabled');
+							compBtn.textContent = 'Guardar Composición';
+						}
+					}
+				} catch (err) {
+					console.error('Error updating composition:', err);
+					alert('Error de conexión.');
+					if (compBtn) {
+						compBtn.removeAttribute('disabled');
+						compBtn.textContent = 'Guardar Composición';
+					}
+				}
+			});
+		}
+
+		if (sponsForm) {
+			sponsForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				if (sponsBtn) {
+					sponsBtn.setAttribute('disabled', 'true');
+					sponsBtn.textContent = 'Registrando...';
+				}
+
+				const formData = new FormData(sponsForm);
+				const payload = {
+					companyName: formData.get('companyName'),
+					taxId: formData.get('taxId'),
+					declarationNoDebt: formGetCheckbox('declarationNoDebt')
+				};
+
+				try {
+					const res = await fetch('/api/private/team/sponsorships', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(payload)
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Patrocinio registrado.');
+						window.location.reload();
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error al registrar patrocinio.'));
+						if (sponsBtn) {
+							sponsBtn.removeAttribute('disabled');
+							sponsBtn.textContent = 'Registrar Contrato';
+						}
+					}
+				} catch (err) {
+					console.error('Error registering sponsor:', err);
+					alert('Error de conexión.');
+					if (sponsBtn) {
+						sponsBtn.removeAttribute('disabled');
+						sponsBtn.textContent = 'Registrar Contrato';
+					}
+				}
+			});
+		}
+
+		function formGetCheckbox(name: string) {
+			const el = sponsForm.querySelector(`input[name="${name}"]:checked`);
+			return el !== null;
+		}
+	});
+</script>

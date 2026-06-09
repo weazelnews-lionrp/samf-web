@@ -1,0 +1,165 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+// Fetch user profile from API
+let profileData = null
+try {
+	const apiUrl = new URL('/api/user/profile', Astro.url)
+	const res = await fetch(apiUrl, {
+		headers: {
+			Cookie: Astro.request.headers.get('cookie') || ''
+		}
+	})
+	const data = await res.json()
+	if (data.success) {
+		profileData = data
+	}
+} catch (err) {
+	console.error('Error fetching profile in dashboard:', err)
+}
+
+const entity = profileData?.associatedEntity
+---
+
+<Layout title="Mi Panel Deportivo | SAMF" description="Panel privado de autogestión de pilotos y directores de escudería de la SAMF.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/dashboard" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Header Card -->
+			<Card glow>
+				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+					<div>
+						<span class="text-xs text-text-muted font-racing uppercase tracking-wider block">Bienvenido de nuevo,</span>
+						<h1 class="text-2xl font-black font-racing text-white uppercase tracking-wider">{character.name}</h1>
+						<p class="text-xs text-text-muted mt-1 font-mono">Citizen ID: {citizenid} | Discord: {user.name}</p>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="text-xs text-text-muted uppercase tracking-wider">Rol SAMF:</span>
+						<StatusBadge status={user.role} />
+					</div>
+				</div>
+			</Card>
+
+			<!-- Entity Specific Status (Piloto or Director) -->
+			{entity ? (
+				entity.type === 'driver' ? (
+					<Card class="bg-slate-dark/50 border-emerald-500/20">
+						<h2 class="text-sm font-bold uppercase tracking-wider font-racing text-white mb-3 flex items-center gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>
+							Estado de tu Licencia de Competidor (Art. 15)
+						</h2>
+						<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs font-mono">
+							<div>
+								<span class="text-text-muted">Estado de Licencia:</span>
+								<StatusBadge status={entity.licenseStatus} class="ml-2 text-[10px]" />
+							</div>
+							<div>
+								<span class="text-text-muted">Escudería Actual:</span>
+								<span class="text-white font-bold ml-2">{entity.teamName || 'Ninguna (Agente Libre)'}</span>
+							</div>
+						</div>
+					</Card>
+				) : (
+					<Card class="bg-slate-dark/50 border-brand-red/20">
+						<h2 class="text-sm font-bold uppercase tracking-wider font-racing text-white mb-3 flex items-center gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-red"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+							Estado de tu Escudería Asociada (Art. 11 & 12)
+						</h2>
+						<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs font-mono">
+							<div>
+								<span class="text-text-muted">Escudería:</span>
+								<span class="text-white font-bold ml-2 uppercase font-racing tracking-wide">{entity.name}</span>
+							</div>
+							<div>
+								<span class="text-text-muted">Estado Registro:</span>
+								<StatusBadge status={entity.status} class="ml-2 text-[10px]" />
+							</div>
+						</div>
+					</Card>
+				)
+			) : (
+				<Card class="bg-slate-dark/30 border-dashed border-slate-border text-center py-8">
+					<p class="text-xs text-text-muted mb-4">No tienes perfiles deportivos (Piloto o Escudería) asociados a este personaje todavía.</p>
+					<div class="flex flex-wrap items-center justify-center gap-3">
+						<Button href="/private/applications/driver-license" variant="primary" size="sm">
+							Solicitar Licencia de Piloto
+						</Button>
+						<Button href="/private/applications/team-registration" variant="secondary" size="sm">
+							Inscribir Nueva Escudería
+						</Button>
+					</div>
+				</Card>
+			)}
+
+			<!-- Dashboard Shortcuts Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<!-- Administrative Procedures -->
+				<Card>
+					<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white mb-4 border-b border-slate-border/50 pb-2 flex items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-red"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+						Trámites Administrativos
+					</h2>
+					<ul class="flex flex-col gap-2 text-xs">
+						<li>
+							<a href="/private/applications/driver-license" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-black/30 border border-slate-border/50 hover:border-slate-normal hover:bg-slate-black/60 transition-colors">
+								<span>Solicitar/Renovar Licencia de Piloto ($7,500)</span>
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="m9 18 6-6-6-6"/></svg>
+							</a>
+						</li>
+						<li>
+							<a href="/private/applications/team-registration" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-black/30 border border-slate-border/50 hover:border-slate-normal hover:bg-slate-black/60 transition-colors">
+								<span>Inscripción de Nueva Escudería ($30,000)</span>
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="m9 18 6-6-6-6"/></svg>
+							</a>
+						</li>
+						<li>
+							<a href="/private/applications/delegated-event" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-black/30 border border-slate-border/50 hover:border-slate-normal hover:bg-slate-black/60 transition-colors">
+								<span>Solicitar Autorización de Evento (Rally)</span>
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="m9 18 6-6-6-6"/></svg>
+							</a>
+						</li>
+					</ul>
+				</Card>
+
+				<!-- Technical Procedures -->
+				<Card>
+					<h2 class="text-base font-bold uppercase tracking-wider font-racing text-white mb-4 border-b border-slate-border/50 pb-2 flex items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-red"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+						Gestión Técnica de Vehículos
+					</h2>
+					<ul class="flex flex-col gap-2 text-xs">
+						<li>
+							<a href="/private/vehicles/homologation" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-black/30 border border-slate-border/50 hover:border-slate-normal hover:bg-slate-black/60 transition-colors">
+								<span>Solicitud de Homologación de Vehículo (Chasis)</span>
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="m9 18 6-6-6-6"/></svg>
+							</a>
+						</li>
+						{(user.role === 'DIRECTOR_ESCUDERIA' || user.role === 'STAFF_ADMIN' || user.role === 'STAFF_DIRECTOR_GENERAL') && (
+							<li>
+								<a href="/private/vehicles/catalog-inclusion" class="flex items-center justify-between p-2.5 rounded-lg bg-slate-black/30 border border-slate-border/50 hover:border-slate-normal hover:bg-slate-black/60 transition-colors">
+									<span>Solicitar Inclusión de Modelo en Catálogo (Art. 8)</span>
+									<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="m9 18 6-6-6-6"/></svg>
+								</a>
+							</li>
+						)}
+					</ul>
+				</Card>
+			</div>
+
+		</div>
+	</div>
+</Layout>

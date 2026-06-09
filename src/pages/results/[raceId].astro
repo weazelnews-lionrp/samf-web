@@ -1,0 +1,142 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+
+const { raceId } = Astro.params
+
+// Fetch from API
+const apiUrl = new URL(`/api/results/${raceId}`, Astro.url)
+let results = null
+let errorMsg = ''
+
+try {
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		results = data.raceResults
+	} else {
+		errorMsg = data.error?.message || 'Resultados no encontrados.'
+	}
+} catch (err) {
+	console.error('Error fetching race results:', err)
+	errorMsg = 'Error al recuperar los resultados de la carrera.'
+}
+
+if (!results) {
+	return Astro.redirect('/calendar')
+}
+---
+
+<Layout title={`Resultados ${results.gpName} | SAMF`} description={`Clasificación y resultados oficiales del Gran Premio ${results.gpName} en la SAMF.`}>
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Back Button -->
+		<div class="mb-6">
+			<Button href="/calendar" variant="outline" size="sm" class="flex items-center gap-2">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+				Volver al Calendario
+			</Button>
+		</div>
+
+		<!-- Page Header -->
+		<div class="mb-10">
+			<div class="flex items-center gap-3 mb-2">
+				<span class="w-8 h-[3px] bg-brand-red rounded-sm"></span>
+				<h1 class="text-3xl font-extrabold uppercase tracking-wider font-racing text-white">{results.gpName}</h1>
+			</div>
+			<p class="text-sm text-text-muted">
+				Resultados oficiales homologados por el Comisario de Carrera de la SAMF (Art. 21).
+			</p>
+		</div>
+
+		<!-- Pole & Fastest Lap Cards -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+			<!-- Pole Position -->
+			<Card glow class="flex items-center gap-4">
+				<div class="w-12 h-12 rounded-lg bg-brand-red/10 border border-brand-red/35 flex items-center justify-center text-brand-red shrink-0">
+					<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="12" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>
+				</div>
+				<div>
+					<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block">Pole Position (Art. 21.3)</span>
+					<span class="text-base font-extrabold text-white font-racing block">
+						{results.polePosition ? results.polePosition.driverName : 'Sin registrar'}
+					</span>
+					<span class="text-xs text-text-muted">
+						{results.polePosition ? results.polePosition.teamName : ''}
+					</span>
+				</div>
+			</Card>
+
+			<!-- Fastest Lap -->
+			<Card glow class="flex items-center gap-4">
+				<div class="w-12 h-12 rounded-lg bg-brand-red/10 border border-brand-red/35 flex items-center justify-center text-brand-red shrink-0">
+					<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+				</div>
+				<div>
+					<span class="text-[10px] text-text-muted uppercase tracking-wider font-racing block">Vuelta Rápida (Art. 21.2)</span>
+					<span class="text-base font-extrabold text-brand-red font-racing block">
+						{results.fastestLap ? results.fastestLap.driverName : 'Sin registrar'}
+					</span>
+					<span class="text-xs text-text-muted">
+						Otorga +1 punto adicional si el piloto termina en Top 10
+					</span>
+				</div>
+			</Card>
+		</div>
+
+		<!-- Positions Table -->
+		<Card class="overflow-x-auto">
+			<table class="w-full text-left border-collapse text-sm min-w-[600px]">
+				<thead>
+					<tr class="border-b border-slate-border font-racing tracking-wider uppercase text-[10px] text-text-muted">
+						<th class="py-4 px-4 text-center">Pos</th>
+						<th class="py-4 px-4">Piloto</th>
+						<th class="py-4 px-4">Escudería</th>
+						<th class="py-4 px-4">Estado</th>
+						<th class="py-4 px-4 text-right">Puntos</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-slate-border/40">
+					{results.positions.length === 0 ? (
+						<tr>
+							<td colspan="5" class="py-8 text-center text-text-muted">No se han registrado resultados para esta carrera.</td>
+						</tr>
+					) : (
+						results.positions.map((pos: any) => {
+							const isPodium = pos.position <= 3
+							const podiumColors = [
+								'text-amber-400 font-black', // 1st Gold
+								'text-slate-300 font-bold',   // 2nd Silver
+								'text-amber-600 font-bold'    // 3rd Bronze
+							]
+							return (
+								<tr class="hover:bg-slate-gray/25 transition-colors">
+									<td class="py-4 px-4 text-center font-racing">
+										<span class={isPodium ? podiumColors[pos.position - 1] : 'text-white'}>
+											{pos.position}º
+										</span>
+									</td>
+									<td class="py-4 px-4 font-bold text-white">
+										<a href={`/drivers/${pos.driverId}`} class="hover:text-brand-red transition-colors">
+											{pos.driverName}
+										</a>
+									</td>
+									<td class="py-4 px-4 text-text-secondary">
+										{pos.teamName}
+									</td>
+									<td class="py-4 px-4">
+										<StatusBadge status={pos.status} class="text-[9px]" />
+									</td>
+									<td class="py-4 px-4 text-right font-extrabold text-white font-racing">
+										+{pos.pointsAwarded} pts
+									</td>
+								</tr>
+							)
+						})
+					)}
+				</tbody>
+			</table>
+		</Card>
+	</div>
+</Layout>

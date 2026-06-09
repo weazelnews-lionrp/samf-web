@@ -1,0 +1,179 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import NewsCard from '@/components/NewsCard.astro'
+import { db, samfNews } from 'db/config'
+import { desc } from 'drizzle-orm'
+
+let newsList = []
+
+try {
+	if (db) {
+		const dbNews = await db
+			.select()
+			.from(samfNews)
+			.orderBy(desc(samfNews.createdAt))
+		
+		if (dbNews.length > 0) {
+			newsList = dbNews.map((n) => ({
+				id: n.id,
+				title: n.title,
+				description: n.description,
+				image: n.image,
+				category: n.category,
+				href: `/news/${n.id}`,
+				createdAt: n.createdAt
+			}))
+		}
+	}
+} catch (err) {
+	console.error('Error fetching news list from DB:', err)
+}
+
+// Fallback in case the DB is empty or fails
+if (newsList.length === 0) {
+	newsList = [
+		{
+			id: 'reglamento-tecnico-2025',
+			title: 'Nuevo Reglamento Técnico 2025',
+			description: 'El SAMF publica las actualizaciones del reglamento técnico para todas las categorías del deporte motor en el estado.',
+			image: '/images/news_main.png',
+			category: 'Oficial',
+			href: '/news/reglamento-tecnico-2025',
+			createdAt: new Date('2025-06-01T09:00:00Z')
+		},
+		{
+			id: 'jovenes-talentos',
+			title: 'Programa de desarrollo de jóvenes talentos 2025',
+			description: 'Se abre el plazo de inscripción para el programa anual de formación y becas de la SAMF para nuevos pilotos residentes en el estado.',
+			image: '/images/news_talents.png',
+			category: 'Comunicado',
+			href: '/news/jovenes-talentos',
+			createdAt: new Date('2025-06-03T11:30:00Z')
+		},
+		{
+			id: 'seguridad-circuito',
+			title: 'Nuevos estándares de seguridad en circuito',
+			description: 'El Comité Técnico de Seguridad de la SAMF anuncia la actualización obligatoria del equipamiento de barreras y escapatorias.',
+			image: '/images/news_safety.png',
+			category: 'Seguridad',
+			href: '/news/seguridad-circuito',
+			createdAt: new Date('2025-06-05T14:15:00Z')
+		}
+	]
+}
+
+// Distinct categories for filters
+const categories = ['Todas', ...new Set(newsList.map(n => n.category))]
+---
+
+<Layout title="Noticias y Comunicados Oficiales | SAMF" description="Catálogo completo de noticias, comunicados de prensa y reglamentos técnicos de la San Andreas Motorsports Federation.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		
+		<!-- Breadcrumbs & Date -->
+		<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-6 text-xs text-text-muted font-mono uppercase tracking-widest">
+			<div class="flex items-center gap-2">
+				<a href="/" class="hover:text-brand-red transition-colors">Inicio</a>
+				<span>/</span>
+				<span class="text-white font-bold">Noticias</span>
+			</div>
+			<span>Boletín de Actualizaciones</span>
+		</div>
+
+		<!-- Page Title -->
+		<div class="mb-10">
+			<div class="flex items-center gap-3 mb-3">
+				<span class="w-8 h-[3px] bg-brand-red rounded-sm"></span>
+				<h1 class="text-3xl font-extrabold uppercase tracking-wider font-racing text-white">Noticias y Comunicados</h1>
+			</div>
+			<p class="text-sm text-text-muted max-w-2xl leading-relaxed">
+				Acceso a las resoluciones del Comité, noticias de escuderías, comunicados de prensa generales y modificaciones reglamentarias vigentes en el estado (Art. 6.2 y 11.1).
+			</p>
+		</div>
+
+		<!-- Filter Bar (Interactive Island in Vanilla JS) -->
+		<div class="flex flex-wrap gap-2.5 mb-10 border-b border-slate-border/50 pb-6">
+			{categories.map((cat, i) => (
+				<button
+					type="button"
+					data-filter={cat}
+					class={`filter-btn px-4 py-2 text-xs font-racing font-bold tracking-wider uppercase rounded-lg border transition-all duration-200 cursor-pointer ${
+						i === 0 
+							? 'bg-brand-red border-brand-red text-white shadow-md shadow-brand-red/10' 
+							: 'bg-slate-dark/40 border-slate-border/60 text-text-muted hover:border-slate-border hover:bg-slate-gray/30 hover:text-white'
+					}`}
+				>
+					{cat}
+				</button>
+			))}
+		</div>
+
+		<!-- News Listing Grid -->
+		{newsList.length === 0 ? (
+			<Card class="text-center py-16 text-text-muted">
+				No hay noticias publicadas en este momento.
+			</Card>
+		) : (
+			<div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				{newsList.map((news) => (
+					<div 
+						class="news-item transition-all duration-300 transform" 
+						data-category={news.category}
+					>
+						<NewsCard 
+							title={news.title}
+							description={news.description}
+							image={news.image}
+							category={news.category}
+							href={news.href}
+							isMain={false}
+						/>
+					</div>
+				))}
+			</div>
+		)}
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const filterButtons = document.querySelectorAll('.filter-btn');
+		const newsItems = document.querySelectorAll('.news-item') as NodeListOf<HTMLElement>;
+
+		if (filterButtons.length > 0 && newsItems.length > 0) {
+			filterButtons.forEach(btn => {
+				btn.addEventListener('click', () => {
+					const filterValue = btn.getAttribute('data-filter');
+
+					// Update active class on buttons
+					filterButtons.forEach(b => {
+						b.classList.remove('bg-brand-red', 'border-brand-red', 'text-white', 'shadow-md', 'shadow-brand-red/10');
+						b.classList.add('bg-slate-dark/40', 'border-slate-border/60', 'text-text-muted');
+					});
+
+					btn.classList.add('bg-brand-red', 'border-brand-red', 'text-white', 'shadow-md', 'shadow-brand-red/10');
+					btn.classList.remove('bg-slate-dark/40', 'border-slate-border/60', 'text-text-muted');
+
+					// Filter cards
+					newsItems.forEach(item => {
+						const category = item.getAttribute('data-category');
+						if (filterValue === 'Todas' || category === filterValue) {
+							item.style.display = 'block';
+							// Quick animation in
+							setTimeout(() => {
+								item.style.opacity = '1';
+								item.style.transform = 'scale(1)';
+							}, 50);
+						} else {
+							item.style.opacity = '0';
+							item.style.transform = 'scale(0.95)';
+							setTimeout(() => {
+								item.style.display = 'none';
+							}, 200);
+						}
+					});
+				});
+			});
+		}
+	});
+</script>

@@ -1,0 +1,222 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection & Role check (Staff Admin only)
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+
+if (user.role !== 'STAFF_ADMIN' && user.role !== 'STAFF_DIRECTOR_GENERAL') {
+	return Astro.redirect('/private/dashboard')
+}
+
+// 1. Fetch scheduled GPs
+let gps = []
+try {
+	const gpUrl = new URL('/api/calendar', Astro.url)
+	const res = await fetch(gpUrl)
+	const data = await res.json()
+	if (data.success) {
+		gps = (data.events || []).filter((e: any) => e.status !== 'COMPLETED')
+	}
+} catch (err) {
+	console.error('Error fetching GPs in admin competitions:', err)
+}
+
+// 2. Fetch all drivers for selecting positions
+let drivers = []
+try {
+	const driverUrl = new URL('/api/drivers', Astro.url)
+	const res = await fetch(driverUrl)
+	const data = await res.json()
+	if (data.success) {
+		drivers = data.drivers || []
+	}
+} catch (err) {
+	console.error('Error fetching drivers in admin competitions:', err)
+}
+
+const gpOptions = gps.map((g: any) => ({ value: g.id, label: g.name }))
+const driverOptions = drivers.map((d: any) => ({ value: d.id, label: `${d.name} (${d.teamName || 'Sin Escudería'})` }))
+const statusOptions = [
+	{ value: 'FINISHED', label: 'Terminado (FINISHED)' },
+	{ value: 'DNF', label: 'No Terminado (DNF)' },
+	{ value: 'DSQ', label: 'Descalificado (DSQ)' },
+	{ value: 'DNS', label: 'No Empezado (DNS)' }
+]
+---
+
+<Layout title="Gestión de Ligas y GP | SAMF Intranet" description="Publicar resultados oficiales de carreras y reajustar las clasificaciones.">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/admin/competitions" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Header Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Publicar Resultados de Gran Premio</h1>
+				</div>
+				<p class="text-xs text-text-muted">
+					Registra las posiciones finales de los competidores. El sistema recalculará los puntos de pilotos y constructor automáticamente (Art. 21).
+				</p>
+			</Card>
+
+			<!-- Form Card -->
+			<Card>
+				{gpOptions.length === 0 ? (
+					<div class="text-center py-10 text-text-muted text-sm">
+						No hay Grandes Premios programados pendientes de resultados en el calendario.
+					</div>
+				) : (
+					<form id="gp-results-form" class="flex flex-col gap-6">
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+							<Input 
+								label="Seleccionar Gran Premio" 
+								type="select" 
+								name="raceId" 
+								placeholder="Selecciona un GP activo..."
+								options={gpOptions}
+								required 
+							/>
+							<Input 
+								label="Pole Position (Art. 21.3)" 
+								type="select" 
+								name="polePositionDriverId" 
+								placeholder="Selecciona piloto..."
+								options={driverOptions}
+								required 
+							/>
+							<Input 
+								label="Vuelta Rápida (Art. 21.2)" 
+								type="select" 
+								name="fastestLapDriverId" 
+								placeholder="Selecciona piloto..."
+								options={driverOptions}
+								required 
+							/>
+						</div>
+
+						<div class="border-t border-slate-border/50 pt-4 mt-2">
+							<h3 class="text-xs font-bold text-brand-red font-racing uppercase tracking-wider mb-4">Clasificación de Llegada (Puestos 1º al 10º)</h3>
+							
+							<div class="flex flex-col gap-4">
+								{[...Array(10)].map((_, index) => {
+									const pos = index + 1
+									return (
+										<div class="flex flex-col sm:flex-row items-end gap-4 bg-slate-black/20 border border-slate-border/50 rounded-lg p-4 font-mono text-xs">
+											<div class="w-12 text-center shrink-0 pb-3 font-racing font-extrabold text-white text-base">
+												{pos}º
+											</div>
+											<Input 
+												label="Piloto" 
+												type="select" 
+												name={`driver-${pos}`} 
+												placeholder="Elige piloto..."
+												options={driverOptions}
+												required={pos <= 3} // Required for podium at least
+											/>
+											<Input 
+												label="Estado de Llegada" 
+												type="select" 
+												name={`status-${pos}`} 
+												options={statusOptions}
+												value="FINISHED"
+												required 
+											/>
+										</div>
+									)
+								})}
+							</div>
+						</div>
+
+						<div class="flex justify-end gap-3 mt-4 border-t border-slate-border/30 pt-6">
+							<Button type="button" variant="outline" href="/private/dashboard">
+								Cancelar
+							</Button>
+							<Button type="submit" variant="primary" id="pub-btn">
+								Publicar Clasificación
+							</Button>
+						</div>
+					</form>
+				)}
+			</Card>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const form = document.getElementById('gp-results-form') as HTMLFormElement;
+		const pubBtn = document.getElementById('pub-btn');
+
+		if (form) {
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				if (pubBtn) {
+					pubBtn.setAttribute('disabled', 'true');
+					pubBtn.textContent = 'Publicando...';
+				}
+
+				const formData = new FormData(form);
+				const raceId = formData.get('raceId') as string;
+				
+				const results = [];
+				for (let i = 1; i <= 10; i++) {
+					const driverId = formData.get(`driver-${i}`) as string;
+					const status = formData.get(`status-${i}`) as string;
+					if (driverId) {
+						results.push({
+							position: i,
+							driverId,
+							status
+						});
+					}
+				}
+
+				const payload = {
+					polePositionDriverId: formData.get('polePositionDriverId'),
+					fastestLapDriverId: formData.get('fastestLapDriverId'),
+					results
+				};
+
+				try {
+					const res = await fetch(`/api/admin/competitions/races/${raceId}/results`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(payload)
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Resultados de carrera publicados con éxito.');
+						window.location.href = '/standings';
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error al publicar los resultados.'));
+						if (pubBtn) {
+							pubBtn.removeAttribute('disabled');
+							pubBtn.textContent = 'Publicar Clasificación';
+						}
+					}
+				} catch (err) {
+					console.error('Error publishing results:', err);
+					alert('Error de conexión.');
+					if (pubBtn) {
+						pubBtn.removeAttribute('disabled');
+						pubBtn.textContent = 'Publicar Clasificación';
+					}
+				}
+			});
+		}
+	});
+</script>

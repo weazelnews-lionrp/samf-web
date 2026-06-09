@@ -1,0 +1,109 @@
+---
+import NewsCard from './NewsCard.astro'
+import { ChevronRight } from '@lucide/astro/icons'
+import { db, samfNews } from 'db/config'
+import { desc } from 'drizzle-orm'
+
+let newsList = []
+let mainNews = null
+let subNews = []
+
+try {
+	if (db) {
+		const dbNews = await db.select().from(samfNews).orderBy(desc(samfNews.createdAt)).limit(3)
+
+		if (dbNews.length > 0) {
+			newsList = dbNews.map((n, index) => ({
+				title: n.title,
+				description: n.description,
+				image: n.image,
+				category: n.category,
+				href: `/news/${n.id}`,
+				isMain: index === 0,
+			}))
+			mainNews = newsList[0]
+			subNews = newsList.slice(1)
+		}
+	}
+} catch (err) {
+	console.error('Error fetching featured news from DB:', err)
+}
+
+// Fallback if DB query fails or has no entries
+if (newsList.length === 0) {
+	const fallbackNews = [
+		{
+			title: 'Nuevo Reglamento Técnico 2025',
+			description:
+				'El SAMF publica las actualizaciones del reglamento técnico para todas las categorías del deporte motor en el estado.',
+			image: '/images/news_main.png',
+			category: 'Oficial',
+			href: '/news/reglamento-tecnico-2025',
+			isMain: true,
+		},
+		{
+			title: 'Programa de desarrollo de jóvenes talentos 2025',
+			image: '/images/news_talents.png',
+			category: 'Comunicado',
+			href: '/news/jovenes-talentos',
+			isMain: false,
+		},
+		{
+			title: 'Nuevos estándares de seguridad en circuito',
+			image: '/images/news_safety.png',
+			category: 'Seguridad',
+			href: '/news/seguridad-circuito',
+			isMain: false,
+		},
+	]
+	mainNews = fallbackNews.find((n) => n.isMain)
+	subNews = fallbackNews.filter((n) => !n.isMain)
+}
+---
+
+<div class="flex flex-col gap-6">
+	<!-- Section Title -->
+	<div class="flex items-center gap-3">
+		<span class="bg-brand-red h-[3px] w-6 rounded-sm"></span>
+		<h2 class="font-racing text-xl font-extrabold tracking-wider text-white uppercase">
+			Noticias Destacadas
+		</h2>
+	</div>
+
+	<!-- Main News -->
+	{
+		mainNews && (
+			<NewsCard
+				title={mainNews.title}
+				description={mainNews.description}
+				image={mainNews.image}
+				category={mainNews.category}
+				href={mainNews.href}
+				isMain={true}
+			/>
+		)
+	}
+
+	<!-- Secondary News Grid -->
+	<div class="grid grid-cols-2 gap-4">
+		{
+			subNews.map((news) => (
+				<NewsCard
+					title={news.title}
+					image={news.image}
+					category={news.category}
+					href={news.href}
+					isMain={false}
+				/>
+			))
+		}
+	</div>
+
+	<!-- Bottom View All Button -->
+	<a
+		href="/news"
+		class="border-slate-border/60 bg-slate-dark/30 hover:bg-slate-gray/40 hover:border-slate-border font-racing flex w-full items-center justify-between rounded-xl border px-4 py-3 text-xs font-bold tracking-wider uppercase transition-all duration-200">
+		<span>Ver todas las noticias</span>
+		<ChevronRight size={16} />
+	</a>
+</div>

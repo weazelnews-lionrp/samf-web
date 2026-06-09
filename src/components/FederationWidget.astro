@@ -1,0 +1,97 @@
+---
+import { Scale, Heart, Activity, Shield, ChevronRight } from '@lucide/astro/icons'
+---
+
+<div
+	class="border-slate-border/50 flex h-full flex-col justify-between border-t pt-8 lg:border-t-0 lg:pt-0">
+	<div>
+		<!-- Section Title -->
+		<div class="mb-6 flex items-center gap-3">
+			<span class="bg-brand-red h-[3px] w-6 rounded-sm"></span>
+			<h2 class="font-racing text-xl font-extrabold tracking-wider text-white uppercase">
+				La Federación
+			</h2>
+		</div>
+
+		<!-- Text Intro -->
+		<p class="text-text-secondary mb-6 text-xs leading-relaxed">
+			El SAMF trabaja para el desarrollo sostenible del deporte del motor en San Andreas,
+			fomentando la competencia justa, la innovación y la participación de la comunidad.
+		</p>
+
+		<!-- Values Grid 2x2 -->
+		<div class="mb-6 grid grid-cols-2 gap-4">
+			<!-- Pillar 1 -->
+			<div class="flex gap-2">
+				<div class="text-brand-red mt-0.5 shrink-0">
+					<Scale size={16} />
+				</div>
+				<div>
+					<h4
+						class="font-racing text-[10px] leading-tight font-bold tracking-wider text-white uppercase">
+						Seguridad y Transparencia
+					</h4>
+				</div>
+			</div>
+			<!-- Pillar 2 -->
+			<div class="flex gap-2">
+				<div class="text-brand-red mt-0.5 shrink-0">
+					<Heart size={16} />
+				</div>
+				<div>
+					<h4
+						class="font-racing text-[10px] leading-tight font-bold tracking-wider text-white uppercase">
+						Igualdad de Oportunidades
+					</h4>
+				</div>
+			</div>
+			<!-- Pillar 3 -->
+			<div class="flex gap-2">
+				<div class="text-brand-red mt-0.5 shrink-0">
+					<Activity size={16} />
+				</div>
+				<div>
+					<h4
+						class="font-racing text-[10px] leading-tight font-bold tracking-wider text-white uppercase">
+						Desarrollo del Deporte
+					</h4>
+				</div>
+			</div>
+			<!-- Pillar 4 -->
+			<div class="flex gap-2">
+				<div class="text-brand-red mt-0.5 shrink-0">
+					<Shield size={16} />
+				</div>
+				<div>
+					<h4
+						class="font-racing text-[10px] leading-tight font-bold tracking-wider text-white uppercase">
+						Compromiso con la Comunidad
+					</h4>
+				</div>
+			</div>
+		</div>
+
+		<!-- Corporate HQ Image -->
+		<div
+			class="border-slate-border/30 relative aspect-video overflow-hidden rounded-xl border shadow-md">
+			<img
+				src="/images/federation_hq.png"
+				alt="Sede corporativa de la SAMF"
+				class="h-full w-full object-cover"
+			/>
+			<div class="bg-slate-black/30 absolute inset-0"></div>
+			<div
+				class="bg-slate-black/80 font-racing text-text-muted border-slate-border/55 absolute right-2 bottom-2 rounded border px-2 py-0.5 text-[8px] tracking-widest uppercase backdrop-blur-md">
+				Sede Central SAMF
+			</div>
+		</div>
+	</div>
+
+	<!-- Bottom Misión Button -->
+	<a
+		href="/transparency"
+		class="border-slate-border/60 bg-slate-dark/30 hover:bg-slate-gray/40 hover:border-slate-border font-racing mt-6 flex w-full items-center justify-between rounded-xl border px-4 py-3 text-xs font-bold tracking-wider uppercase transition-all duration-200">
+		<span>Conoce nuestra misión</span>
+		<ChevronRight size={16} />
+	</a>
+</div>

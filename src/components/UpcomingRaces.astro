@@ -1,0 +1,147 @@
+---
+import CalendarEventRow from './CalendarEventRow.astro'
+import { db, samfGrandPrixEvents, samfCircuits } from 'db/config'
+import { eq, not, asc } from 'drizzle-orm'
+
+let races = []
+
+try {
+	if (db) {
+		const dbRaces = await db
+			.select({
+				id: samfGrandPrixEvents.id,
+				name: samfGrandPrixEvents.name,
+				startDate: samfGrandPrixEvents.startDate,
+				endDate: samfGrandPrixEvents.endDate,
+				status: samfGrandPrixEvents.status,
+				circuit: {
+					name: samfCircuits.name,
+					location: samfCircuits.location,
+				},
+			})
+			.from(samfGrandPrixEvents)
+			.innerJoin(samfCircuits, eq(samfGrandPrixEvents.circuitId, samfCircuits.id))
+			.where(not(eq(samfGrandPrixEvents.status, 'COMPLETED')))
+			.orderBy(asc(samfGrandPrixEvents.startDate))
+			.limit(5)
+
+		if (dbRaces.length > 0) {
+			races = dbRaces.map((r, index) => {
+				const start = new Date(r.startDate)
+				const end = new Date(r.endDate)
+				const dayStr = `${start.getDate().toString().padStart(2, '0')}-${end.getDate().toString().padStart(2, '0')}`
+				const monthStr = start
+					.toLocaleDateString('es-ES', { month: 'short' })
+					.toUpperCase()
+					.replace('.', '')
+
+				let colorClass = 'text-white font-extrabold'
+				if (index === 1) colorClass = 'text-brand-red font-black'
+				else if (index === 2) colorClass = 'text-emerald-400 font-bold'
+				else if (index === 3) colorClass = 'text-sky-400 font-bold'
+				else if (index === 4) colorClass = 'text-orange-400 font-bold'
+
+				return {
+					day: dayStr,
+					month: monthStr,
+					title: r.name,
+					location: `${r.circuit.name} / ${r.circuit.location}`,
+					isNext: r.status === 'ACTIVE' || index === 0,
+					titleColorClass: colorClass,
+				}
+			})
+		}
+	}
+} catch (err) {
+	console.error('Error fetching upcoming races from DB:', err)
+}
+
+if (races.length === 0) {
+	races = [
+		{
+			day: '18-20',
+			month: 'JUL',
+			title: 'San Andreas Grand Prix',
+			location: 'Maze Bank Circuit / Los Santos',
+			isNext: true,
+			titleColorClass: 'text-white font-extrabold',
+		},
+		{
+			day: '08-10',
+			month: 'AGO',
+			title: 'Redwood Endurance',
+			location: 'Redwood Lights Track / Paleto Bay',
+			isNext: false,
+			titleColorClass: 'text-brand-red font-black',
+		},
+		{
+			day: '29-31',
+			month: 'AGO',
+			title: 'Vinewood Street Series',
+			location: 'Vinewood Circuit / Los Santos',
+			isNext: false,
+			titleColorClass: 'text-emerald-400 font-bold',
+		},
+		{
+			day: '19-21',
+			month: 'SEP',
+			title: 'Alamo Sea 300',
+			location: 'Alamo Sea Raceway / Sandy Shores',
+			isNext: false,
+			titleColorClass: 'text-sky-400 font-bold',
+		},
+		{
+			day: '10-12',
+			month: 'OCT',
+			title: 'Mount Chiliad Hillclimb',
+			location: 'Mount Chiliad / North Calafia',
+			isNext: false,
+			titleColorClass: 'text-orange-400 font-bold',
+		},
+	]
+}
+---
+
+<div
+	class="border-slate-border/50 flex h-full flex-col justify-between border-t pt-8 lg:border-x lg:border-t-0 lg:px-8 lg:pt-0">
+	<div>
+		<!-- Section Title with Complete Link -->
+		<div class="mb-6 flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<span class="bg-brand-red h-[3px] w-6 rounded-sm"></span>
+				<h2 class="font-racing text-xl font-extrabold tracking-wider text-white uppercase">
+					Calendario 2025
+				</h2>
+			</div>
+			<a
+				href="/calendar"
+				class="text-brand-red hover:text-brand-red-light font-racing text-[10px] font-bold tracking-wider uppercase transition-colors">
+				Ver completo
+			</a>
+		</div>
+
+		<!-- Calendar Events List -->
+		<div class="divide-slate-border/50 flex flex-col divide-y">
+			{
+				races.map((race) => (
+					<CalendarEventRow
+						day={race.day}
+						month={race.month}
+						title={race.title}
+						location={race.location}
+						isNext={race.isNext}
+						titleColorClass={race.titleColorClass}
+					/>
+				))
+			}
+		</div>
+	</div>
+
+	<!-- Footnote and Info -->
+	<div class="mt-6 flex flex-col gap-2">
+		<p class="text-text-muted text-[9px] leading-snug">
+			* El calendario está sujeto a cambios regulatorios y de pista. Consulta periódicamente
+			el calendario oficial para actualizaciones.
+		</p>
+	</div>
+</div>

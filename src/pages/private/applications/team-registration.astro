@@ -1,0 +1,168 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/ui/Input.astro'
+import DashboardSidebar from '@/components/ui/DashboardSidebar.astro'
+
+const { user, citizenid, character } = Astro.locals
+
+// Auth protection
+if (!user || !citizenid || !character) {
+	return Astro.redirect('/account')
+}
+---
+
+<Layout title="Inscripción de Escudería | SAMF" description="Trámite oficial de inscripción de nueva escudería en el registro de la SAMF (Art. 12).">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row gap-8">
+		<!-- Sidebar Menu -->
+		<DashboardSidebar activePath="/private/applications" role={user.role} />
+
+		<!-- Main Panel Content -->
+		<div class="flex-1 flex flex-col gap-6">
+			<!-- Back Link -->
+			<div>
+				<Button href="/private/applications" variant="outline" size="sm" class="flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+					Volver a Trámites
+				</Button>
+			</div>
+
+			<!-- Form Card -->
+			<Card glow>
+				<div class="flex items-center gap-3 mb-2 border-b border-slate-border/50 pb-3">
+					<span class="w-6 h-[2px] bg-brand-red rounded-sm"></span>
+					<h1 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Inscripción de Nueva Escudería (Art. 12.1)</h1>
+				</div>
+				
+				<p class="text-xs text-text-muted mb-8 leading-relaxed">
+					Completa el siguiente formulario reglamentario. Deberás adjuntar el justificante del pago de la tasa de inscripción inicial de <strong>$30,000</strong> (Art. 12.3).
+				</p>
+
+				<form id="team-registration-form" class="flex flex-col gap-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<Input 
+							label="Nombre de la Escudería" 
+							type="text" 
+							name="name" 
+							placeholder="Ej. Grotti Racing Team" 
+							required 
+						/>
+						<Input 
+							label="Color Distintivo Visual" 
+							type="color" 
+							name="visualBadge" 
+							value="#ff0000"
+							required 
+						/>
+					</div>
+
+					<Input 
+						label="Pilotos Titulares Iniciales (IDs de Ciudadano, separados por coma)" 
+						type="text" 
+						name="driversInput" 
+						placeholder="Ej. citizen1, citizen2" 
+					/>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<Input 
+							label="Logotipo Corporativo (PNG/JPG)" 
+							type="file" 
+							name="logoFile" 
+							accept="image/*"
+							required 
+						/>
+						<Input 
+							label="Justificante del Pago de Tasas ($30,000) (PDF/Imagen)" 
+							type="file" 
+							name="paymentProofFile" 
+							accept=".pdf,image/*"
+							required 
+						/>
+					</div>
+
+					<div class="border-t border-slate-border/50 pt-4 mt-2">
+						<Input 
+							label="Acepto y declaro responsablemente que los pilotos titulares e integrantes del equipo cumplen plenamente las normas, reglamentación de la SAMF y asumo la responsabilidad por su comportamiento deportivo." 
+							type="checkbox" 
+							name="responsibleDeclaration" 
+							required 
+						/>
+					</div>
+
+					<div class="flex justify-end gap-3 mt-4 border-t border-slate-border/30 pt-6">
+						<Button type="button" variant="outline" href="/private/applications">
+							Cancelar
+						</Button>
+						<Button type="submit" variant="primary" id="submit-btn">
+							Enviar Solicitud
+						</Button>
+					</div>
+				</form>
+			</Card>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('astro:page-load', () => {
+		const form = document.getElementById('team-registration-form') as HTMLFormElement;
+		const submitBtn = document.getElementById('submit-btn');
+
+		if (form) {
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				if (submitBtn) {
+					submitBtn.setAttribute('disabled', 'true');
+					submitBtn.textContent = 'Enviando...';
+				}
+
+				const formData = new FormData(form);
+
+				// Process initial drivers comma list into a JSON array string
+				const driversInput = formData.get('driversInput') as string;
+				let initialDrivers = [];
+				if (driversInput) {
+					initialDrivers = driversInput
+						.split(',')
+						.map(d => d.trim())
+						.filter(Boolean);
+				}
+				
+				formData.delete('driversInput');
+				formData.set('initialDrivers', JSON.stringify(initialDrivers));
+				
+				// Set responsibleDeclaration value as string representation
+				const isChecked = form.querySelector('input[name="responsibleDeclaration"]:checked') !== null;
+				formData.set('responsibleDeclaration', isChecked ? 'true' : 'false');
+
+				try {
+					const res = await fetch('/api/private/applications/team-registration', {
+						method: 'POST',
+						body: formData
+					});
+
+					const data = await res.json();
+					if (data.success) {
+						alert(data.message || 'Trámite registrado correctamente.');
+						window.location.href = '/private/dashboard';
+					} else {
+						alert('Error: ' + (data.error?.message || 'Error desconocido al procesar trámite.'));
+						if (submitBtn) {
+							submitBtn.removeAttribute('disabled');
+							submitBtn.textContent = 'Enviar Solicitud';
+						}
+					}
+				} catch (err) {
+					console.error('Error submitting team registration:', err);
+					alert('Error de red en el servidor.');
+					if (submitBtn) {
+						submitBtn.removeAttribute('disabled');
+						submitBtn.textContent = 'Enviar Solicitud';
+					}
+				}
+			});
+		}
+	});
+</script>

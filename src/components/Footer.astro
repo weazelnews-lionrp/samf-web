@@ -1,0 +1,157 @@
+---
+import { SITE_CONFIG, ASSETS } from '@/constants/Site'
+---
+
+<footer class="bg-slate-dark border-t border-slate-border text-text-secondary pt-16 pb-8 font-racing tracking-wide uppercase text-xs">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8 pb-12 border-b border-slate-border/50">
+		
+		<!-- Branding & Socials Column -->
+		<div class="lg:col-span-2 flex flex-col justify-between gap-6">
+			<div>
+				<!-- Logo and title -->
+				<a href="/" class="flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red rounded">
+					<img class="h-14 w-auto rounded object-contain" src={ASSETS.logo} alt={`Logo de ${SITE_CONFIG.shortName}`} />
+					<div class="flex flex-col leading-none">
+						<span class="text-xl font-bold tracking-wider text-white">SAMF</span>
+						<span class="text-[9px] text-text-muted italic tracking-wide lowercase mt-0.5">San Andreas Motorsports Federation</span>
+					</div>
+				</a>
+				<p class="text-[10px] text-text-muted tracking-wide mt-4 lowercase leading-relaxed normal-case select-none">
+					Organismo oficial encargado de regular, supervisar y promover el automovilismo deportivo y las competencias oficiales dentro de todo el territorio del estado de San Andreas.
+				</p>
+			</div>
+
+			<!-- Social Networks -->
+			<div class="flex items-center gap-3">
+				<!-- Facebook -->
+				<a href="#" aria-label="Facebook SAMF" class="w-8 h-8 rounded-full border border-slate-border hover:border-white bg-slate-dark/30 hover:bg-slate-gray/50 flex items-center justify-center text-text-muted hover:text-white transition-all duration-200">
+					<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+						<path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.8c4.56-.93 8-4.96 8-9.8z" />
+					</svg>
+				</a>
+				<!-- X / Twitter -->
+				<a href="#" aria-label="X SAMF" class="w-8 h-8 rounded-full border border-slate-border hover:border-white bg-slate-dark/30 hover:bg-slate-gray/50 flex items-center justify-center text-text-muted hover:text-white transition-all duration-200">
+					<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+						<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+					</svg>
+				</a>
+				<!-- Instagram -->
+				<a href="#" aria-label="Instagram SAMF" class="w-8 h-8 rounded-full border border-slate-border hover:border-white bg-slate-dark/30 hover:bg-slate-gray/50 flex items-center justify-center text-text-muted hover:text-white transition-all duration-200">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+						<path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+						<line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+					</svg>
+				</a>
+				<!-- YouTube -->
+				<a href="#" aria-label="YouTube SAMF" class="w-8 h-8 rounded-full border border-slate-border hover:border-white bg-slate-dark/30 hover:bg-slate-gray/50 flex items-center justify-center text-text-muted hover:text-white transition-all duration-200">
+					<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+						<path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.107C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.556a3.003 3.003 0 0 0-2.11 2.107C0 8.029 0 12 0 12s0 3.971.502 5.837a3.003 3.003 0 0 0 2.11 2.107C4.482 20.5 12 20.5 12 20.5s7.518 0 9.388-.556a3.003 3.003 0 0 0 2.11-2.107C24 15.971 24 12 24 12s0-3.971-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+					</svg>
+				</a>
+			</div>
+		</div>
+
+		<!-- Links Columns -->
+		<!-- Column 1: La Federación -->
+		<div class="flex flex-col gap-4">
+			<h4 class="text-white font-bold text-sm tracking-wider">La Federación</h4>
+			<nav class="flex flex-col gap-2.5">
+				<a href="/transparency" class="hover:text-white transition-colors duration-150">Transparencia y Cuentas</a>
+				<a href="/teams" class="hover:text-white transition-colors duration-150">Escuderías Oficiales</a>
+				<a href="/drivers" class="hover:text-white transition-colors duration-150">Pilotos Registrados</a>
+			</nav>
+		</div>
+
+		<!-- Column 2: Competiciones -->
+		<div class="flex flex-col gap-4">
+			<h4 class="text-white font-bold text-sm tracking-wider">Competiciones</h4>
+			<nav class="flex flex-col gap-2.5">
+				<a href="/calendar" class="hover:text-white transition-colors duration-150">Calendario Oficial</a>
+				<a href="/standings" class="hover:text-white transition-colors duration-150">Clasificaciones y Puntos</a>
+			</nav>
+		</div>
+
+		<!-- Column 3: Trámites -->
+		<div class="flex flex-col gap-4">
+			<h4 class="text-white font-bold text-sm tracking-wider">Trámites</h4>
+			<nav class="flex flex-col gap-2.5">
+				<a href="/private/applications" class="hover:text-white transition-colors duration-150">Licencias y Permisos</a>
+				<a href="/private/vehicles" class="hover:text-white transition-colors duration-150">Homologación de Vehículos</a>
+			</nav>
+		</div>
+
+		<!-- Column 4: Sello Oficial & Contacto -->
+		<div class="flex flex-col justify-between gap-6">
+			<!-- Contact info -->
+			<div class="flex flex-col gap-3">
+				<h4 class="text-white font-bold text-sm tracking-wider">Contacto</h4>
+				<div class="text-[10px] text-text-muted lowercase tracking-wide flex flex-col gap-2 leading-relaxed normal-case">
+					<p class="flex items-start gap-1.5">
+						<svg class="w-3.5 h-3.5 text-brand-red shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+							<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+							<circle cx="12" cy="10" r="3"></circle>
+						</svg>
+						<span>Autopista de Olympic Fwy, 10000<br/>Los Santos, San Andreas</span>
+					</p>
+					<p class="flex items-center gap-1.5">
+						<svg class="w-3.5 h-3.5 text-brand-red shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+							<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+						</svg>
+						<span>(555) 010-SAMF</span>
+					</p>
+					<p class="flex items-center gap-1.5">
+						<svg class="w-3.5 h-3.5 text-brand-red shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+							<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+							<polyline points="22,6 12,13 2,6"></polyline>
+						</svg>
+						<span>info@samf-sa.gov</span>
+					</p>
+				</div>
+			</div>
+
+			<!-- Vector Circular Seal -->
+			<div class="flex justify-start items-center">
+				<svg class="w-20 h-20 text-text-muted/70 hover:text-white transition-colors duration-300 pointer-events-none select-none" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<!-- Outer double circle -->
+					<circle cx="50" cy="50" r="47" stroke="currentColor" stroke-width="1.2" stroke-dasharray="1.5 1.5" />
+					<circle cx="50" cy="50" r="43" stroke="currentColor" stroke-width="1" />
+					<circle cx="50" cy="50" r="31" stroke="currentColor" stroke-width="1" />
+					
+					<!-- Curved Text Path for "SAN ANDREAS MOTORSPORTS FEDERATION" -->
+					<path id="footerSealPath" d="M 50,50 m -37,0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
+					<text font-size="5.5" font-family="monospace" letter-spacing="1.2" fill="currentColor" font-weight="bold">
+						<textPath href="#footerSealPath" startOffset="50%" text-anchor="middle">
+							SAN ANDREAS MOTORSPORTS FEDERATION •
+						</textPath>
+					</text>
+					
+					<!-- Center Bold SAMF Text -->
+					<text x="50" y="55" font-family="'Montserrat', sans-serif" font-size="13" font-weight="900" letter-spacing="0.5" fill="currentColor" text-anchor="middle" font-style="italic">SAMF</text>
+				</svg>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- Bottom Copyright and Legal Info -->
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] text-text-muted select-none normal-case">
+		<div class="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-center md:text-left">
+			<span>© 2026 San Andreas Motorsports Federation. Todos los derechos reservados.</span>
+			<div class="flex gap-3 uppercase font-bold">
+				<a href="/legal" class="hover:text-white transition-colors duration-150">Aviso legal</a>
+				<span>|</span>
+				<a href="/privacy" class="hover:text-white transition-colors duration-150">Política de privacidad</a>
+				<span>|</span>
+				<a href="/accessibility" class="hover:text-white transition-colors duration-150">Accesibilidad</a>
+				<span>|</span>
+				<a href="/sitemap" class="hover:text-white transition-colors duration-150">Mapa del sitio</a>
+			</div>
+		</div>
+		
+		<div class="flex items-center gap-1.5 uppercase font-bold tracking-widest text-[9px] text-text-muted/80">
+			<span>Sitio web oficial del Gobierno de San Andreas</span>
+			<span class="bg-white/10 px-1.5 py-0.5 rounded text-[8px] text-white">SA</span>
+		</div>
+	</div>
+</footer>

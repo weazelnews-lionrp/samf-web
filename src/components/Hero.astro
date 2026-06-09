@@ -2,32 +2,69 @@
 import NextEvent from './NextEvent.astro'
 ---
 
-<section id="hero" class="flex h-[40dvh] w-full">
-	<div class="relative h-full w-[82%]">
+<section
+	id="hero"
+	class="border-slate-border grid h-[55vh] min-h-[480px] w-full grid-cols-1 border-b md:grid-cols-4">
+	<!-- Left Side: Interactive Hero Slider -->
+	<div
+		class="relative flex h-full flex-col justify-center overflow-hidden p-8 md:col-span-3 md:p-12 lg:p-16">
+		<!-- Dark overlay gradient -->
 		<div
-			class="abslute top-0 left-0 flex h-full w-full flex-col items-start justify-center bg-linear-to-r from-black/80 from-20% to-transparent to-50% p-4 pl-8">
-			<p class="text-brand-red-light w-3/10 text-sm uppercase md:text-xs">
-				Por la razón. Por la competición. Por San Andreas.
+			class="from-slate-black/90 via-slate-black/60 absolute inset-0 z-10 bg-linear-to-r to-transparent">
+		</div>
+		<div
+			class="from-slate-black/60 absolute inset-0 z-10 bg-linear-to-t via-transparent to-transparent">
+		</div>
+
+		<!-- Hero Content -->
+		<div class="relative z-20 flex max-w-2xl flex-col items-start gap-4">
+			<p
+				class="text-brand-red font-racing animate-fade-in text-xs font-bold tracking-[0.15em] uppercase md:text-sm">
+				Por la pasión. Por la competición. Por San Andreas.
 			</p>
-			<h2 class="mt-2 w-3/12 text-4xl uppercase">
-				Regulamos.<br />Organizamos.<br />Impulsamos el Motor de San Andreas.
+			<h2
+				class="font-racing text-3xl leading-none font-extrabold tracking-wider text-white uppercase italic sm:text-4xl lg:text-5xl">
+				Regulamos.<br />
+				Organizamos.<br />
+				Impulsamos el motor<br />
+				de San Andreas.
 			</h2>
-			<p class="text-md mt-4 w-3/12 text-xs text-balance">
+			<p
+				class="text-text-secondary mt-2 max-w-xl text-sm leading-relaxed text-balance md:text-base">
 				El SAMF es la organización pública responsable de regular, organizar y desarrollar
-				las competiciones automovilísticas en todo San Andreas, garatizando seguridad,
+				las competiciones automovilísticas en todo San Andreas, garantizando seguridad,
 				igualdad y excelencia deportiva.
 			</p>
+
 			<a
-				href="/about-us"
-				class="bg-brand-red font-racing mt-4 inline-flex w-fit items-center gap-2 rounded-md px-4 py-2 transition-colors duration-200"
-				>Descubre más sobre nosotros</a
-			>
+				href="/transparency"
+				class="bg-brand-red hover:bg-brand-red-light active:bg-brand-red-dark font-racing group mt-4 flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-bold tracking-wider text-white uppercase shadow-md transition-all duration-200 hover:-translate-y-0.5">
+				<span>Conoce más sobre el SAMF</span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="2.5"
+					stroke="currentColor"
+					class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+				</svg>
+			</a>
 		</div>
+
+		<!-- Background Image -->
 		<img
 			src="https://r2.fivemanage.com/nvdv92hnh7O9851209eJW/mMQ2IAuDJnaN.webp"
-			alt="Circuito de Los Santos"
-			class="absolute inset-0 z-[-1] h-full w-full object-cover"
+			alt="Vehículo de competición de la SAMF"
+			class="absolute inset-0 z-0 h-full w-full object-cover object-center select-none"
 		/>
 	</div>
-	<NextEvent server:defer />
+
+	<!-- Right Side: Next Event Card -->
+	<div class="border-slate-border h-full border-t md:col-span-1 md:border-t-0 md:border-l">
+		<NextEvent server:defer />
+	</div>
 </section>

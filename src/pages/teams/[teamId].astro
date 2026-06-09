@@ -1,0 +1,204 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+
+const { teamId } = Astro.params
+
+// Fetch from API
+const apiUrl = new URL(`/api/teams/${teamId}`, Astro.url)
+let team = null
+let errorMsg = ''
+
+try {
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		team = data.team
+	} else {
+		errorMsg = data.error?.message || 'Escudería no encontrada.'
+	}
+} catch (err) {
+	console.error('Error fetching team detail:', err)
+	errorMsg = 'Error al recuperar los detalles de la escudería.'
+}
+
+if (!team) {
+	return Astro.redirect('/teams')
+}
+---
+
+<Layout title={`${team.name} | SAMF`} description={`Ficha deportiva y boletines oficiales de la escudería ${team.name} en la SAMF.`}>
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Back Button -->
+		<div class="mb-6">
+			<Button href="/teams" variant="outline" size="sm" class="flex items-center gap-2">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+				Volver al Directorio
+			</Button>
+		</div>
+
+		<!-- Main Hero Card -->
+		<Card glow class="mb-10">
+			<div class="flex flex-col md:flex-row gap-8 items-center md:items-start justify-between">
+				<div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+					{team.logo ? (
+						<img 
+							src={team.logo} 
+							alt={`Logo de ${team.name}`} 
+							class="w-28 h-28 rounded-xl object-contain bg-slate-black/60 border border-slate-border p-2"
+						/>
+					) : (
+						<div class="w-28 h-28 rounded-xl bg-slate-gray/50 flex items-center justify-center text-text-muted font-bold text-3xl border border-slate-border">
+							{team.name.charAt(0)}
+						</div>
+					)}
+					<div class="text-center md:text-left">
+						<div class="flex flex-col md:flex-row items-center gap-3 mb-2">
+							<h1 class="text-3xl font-extrabold font-racing text-white leading-none">{team.name}</h1>
+							<StatusBadge status={team.status} />
+						</div>
+						<p class="text-sm text-text-muted mb-4">
+							Director de Equipo: <span class="text-white font-medium">{team.director?.name || 'No asignado'}</span> (Art. 13.1)
+						</p>
+						
+						<!-- Visual color indicator -->
+						<div class="flex items-center justify-center md:justify-start gap-2">
+							<span class="text-xs text-text-muted font-racing uppercase tracking-wider">Distintivo Visual:</span>
+							<span 
+								class="w-8 h-4 rounded border border-white/20" 
+								style={{ backgroundColor: team.visualBadge || '#ffffff' }}
+								title={team.visualBadge}
+							></span>
+							<span class="text-xs text-white/80 font-mono font-medium">{team.visualBadge}</span>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Quick Palmares Stats -->
+				<div class="grid grid-cols-2 gap-4 w-full md:w-auto min-w-[280px]">
+					<div class="bg-slate-black/40 border border-slate-border/50 rounded-lg p-4 text-center">
+						<span class="text-[10px] text-text-muted uppercase tracking-widest block font-racing">Puntos Constructores</span>
+						<span class="text-3xl font-black text-white font-racing mt-1 block">{team.points}</span>
+					</div>
+					<div class="bg-slate-black/40 border border-slate-border/50 rounded-lg p-4 text-center">
+						<span class="text-[10px] text-text-muted uppercase tracking-widest block font-racing">Victorias en GP</span>
+						<span class="text-3xl font-black text-brand-red font-racing mt-1 block">{team.palmares?.raceWins || 0}</span>
+					</div>
+				</div>
+			</div>
+		</Card>
+
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<!-- Drivers Squad (Column 1) -->
+			<div class="lg:col-span-1 flex flex-col gap-6">
+				<div class="flex items-center gap-3">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Plantilla de Pilotos</h2>
+				</div>
+				
+				{team.drivers.length === 0 ? (
+					<Card class="py-10 text-center text-text-muted text-sm">
+						No hay pilotos vinculados a esta escudería.
+					</Card>
+				) : (
+					<div class="flex flex-col gap-4">
+						{team.drivers.map((driver: any) => (
+							<Card hoverable class="p-4 flex items-center justify-between border-slate-border/40 hover:border-slate-border">
+								<div class="flex items-center gap-3">
+									{driver.photo ? (
+										<img 
+											src={driver.photo} 
+											alt={driver.name} 
+											class="w-12 h-12 rounded-full object-cover border border-slate-border/60"
+										/>
+									) : (
+										<div class="w-12 h-12 rounded-full bg-slate-gray/60 flex items-center justify-center text-text-muted font-bold">
+											{driver.name.charAt(0)}
+										</div>
+									)}
+									<div>
+										<h3 class="text-sm font-bold text-white font-racing leading-tight">{driver.name}</h3>
+										{driver.isRookie && (
+											<span class="text-[9px] bg-brand-red/10 text-brand-red border border-brand-red/25 px-1.5 py-0.5 rounded font-bold uppercase font-racing tracking-wider mt-1 inline-block">Novato</span>
+										)}
+									</div>
+								</div>
+								
+								<div class="text-right flex flex-col items-end gap-1">
+									<StatusBadge status={driver.licenseStatus} class="text-[9px]" />
+									<a 
+										href={`/drivers/${driver.id}`} 
+										class="text-[10px] text-brand-red hover:underline tracking-wider font-racing uppercase font-bold"
+									>
+										Ver Ficha
+									</a>
+								</div>
+							</Card>
+						))}
+					</div>
+				)}
+
+				<!-- Sponsors Registered (Article 14.5) -->
+				<div class="flex items-center gap-3 mt-4">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Patrocinadores</h2>
+				</div>
+				<Card class="bg-slate-dark/30">
+					{team.sponsors.length === 0 ? (
+						<p class="text-text-muted text-sm text-center py-4">No se han registrado patrocinadores mercantiles oficiales.</p>
+					) : (
+						<div class="flex flex-wrap gap-2">
+							{team.sponsors.map((sponsor: string) => (
+								<span class="bg-slate-gray/40 border border-slate-border rounded-md px-3 py-1.5 text-xs text-white font-medium uppercase font-racing tracking-wider">
+									{sponsor}
+								</span>
+							))}
+						</div>
+					)}
+					<p class="text-[9px] text-text-muted mt-4 leading-normal">
+						* Todo patrocinador listado está en pleno cumplimiento de obligaciones mercantiles y de transparencia de la SAMF (Art. 14).
+					</p>
+				</Card>
+			</div>
+
+			<!-- Bulletins & Press Board (Column 2-3) -->
+			<div class="lg:col-span-2 flex flex-col gap-6">
+				<div class="flex items-center gap-3">
+					<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Tablón de Boletines Oficiales</h2>
+				</div>
+				
+				{team.bulletins.length === 0 ? (
+					<Card class="py-16 text-center text-text-muted">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-newspaper mx-auto mb-3 opacity-30"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zs"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+						No hay comunicados publicados por esta escudería recientemente.
+					</Card>
+				) : (
+					<div class="flex flex-col gap-6">
+						{team.bulletins.map((bulletin: any) => (
+							<Card class="bg-slate-dark/50">
+								<div class="flex items-center justify-between border-b border-slate-border/50 pb-3 mb-4">
+									<h3 class="text-lg font-bold text-white leading-snug">{bulletin.title}</h3>
+									<span class="text-xs text-text-muted font-mono">
+										{new Date(bulletin.createdAt).toLocaleDateString('es-ES', {
+											day: '2-digit',
+											month: 'long',
+											year: 'numeric'
+										})}
+									</span>
+								</div>
+								
+								<!-- Bulletin HTML Content -->
+								<div class="prose prose-invert max-w-none text-sm text-text-secondary leading-relaxed space-y-3">
+									<Fragment set:html={bulletin.content} />
+								</div>
+							</Card>
+						))}
+					</div>
+				)}
+			</div>
+		</div>
+	</div>
+</Layout>

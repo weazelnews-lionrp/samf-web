@@ -1,0 +1,256 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import NewsCard from '@/components/NewsCard.astro'
+import { db, samfNews } from 'db/config'
+import { eq, ne, desc } from 'drizzle-orm'
+
+const { id } = Astro.params
+
+if (!id) {
+	return Astro.redirect('/news')
+}
+
+let article: any = null
+let recentNews: any[] = []
+
+try {
+	if (db) {
+		// 1. Fetch the main article
+		const dbArticle = await db
+			.select()
+			.from(samfNews)
+			.where(eq(samfNews.id, id))
+			.limit(1)
+
+		if (dbArticle.length > 0) {
+			article = dbArticle[0]
+
+			// 2. Fetch other recent news posts for the bottom grid
+			const dbRecent = await db
+				.select()
+				.from(samfNews)
+				.where(ne(samfNews.id, id))
+				.orderBy(desc(samfNews.createdAt))
+				.limit(3)
+			recentNews = dbRecent
+		}
+	}
+} catch (err) {
+	console.error(`Error fetching news article ${id}:`, err)
+}
+
+// Fallback logic for local mock news posts if DB is empty/failing or doesn't have this id
+const fallbackNewsList = [
+	{
+		id: 'reglamento-tecnico-2025',
+		title: 'Nuevo Reglamento Técnico 2025',
+		description: 'El SAMF publica las actualizaciones del reglamento técnico para todas las categorías del deporte motor en el estado.',
+		content: `
+			<p>La San Andreas Motorsports Federation (SAMF) ha publicado oficialmente el Reglamento Técnico de Competición que regirá la temporada 2025 de la Liga Estatal y eventos asociados, en estricto cumplimiento con el Artículo 7.1 de la Ley de Competición y Regulación de Carreras Profesionales Automovilísticas.</p>
+			
+			<h3>Principales Cambios y Homologaciones</h3>
+			<p>El nuevo reglamento introduce modificaciones significativas destinadas a garantizar la máxima seguridad en pista y la igualdad competitiva entre escuderías:</p>
+			<ul>
+				<li><strong>Centralita de Control Única (ECU):</strong> A partir de esta temporada, todos los vehículos participantes deberán contar con la electrónica de control certificada por la federación para mitigar alteraciones de software ilegales (Art. 9.2e).</li>
+				<li><strong>Sistemas de Retención:</strong> Se endurecen los estándares para arneses de seguridad, exigiendo un mínimo de 4 puntos de anclaje con fecha de fabricación vigente y asiento de competición homologado (Art. 9.2c y 9.2d).</li>
+				<li><strong>Extinción Automática:</strong> Se hace obligatorio un sistema de extinción de incendios integrado y operable tanto por el piloto como desde el exterior del habitáculo (Art. 9.2b).</li>
+			</ul>
+			
+			<h3>Calendario de Entrada en Vigor</h3>
+			<p>Las especificaciones técnicas recogidas en este documento serán de obligado cumplimiento para todas las escuderías a partir del primer Gran Premio oficial. Se abrirá un periodo de inspecciones pre-evento en el circuito para asegurar que todos los chasis cumplan la normativa antes de su salida a pista.</p>
+			
+			<p>El documento completo en PDF está disponible para su libre descarga en el Portal de Transparencia del ciudadano (Sección de Reglamentación Técnica).</p>
+		`,
+		image: '/images/news_main.png',
+		category: 'Oficial',
+		createdAt: new Date('2025-06-01T09:00:00Z')
+	},
+	{
+		id: 'jovenes-talentos',
+		title: 'Programa de desarrollo de jóvenes talentos 2025',
+		description: 'Se abre el plazo de inscripción para el programa anual de formación y becas de la SAMF para nuevos pilotos residentes en el estado.',
+		content: `
+			<p>La federación anuncia el lanzamiento de la convocatoria oficial para el <strong>Programa Estatal de Jóvenes Talentos 2025</strong>, cuyo objetivo es descubrir, financiar y entrenar a la próxima generación de pilotos profesionales de San Andreas.</p>
+			
+			<h3>Becas y Soporte Técnico</h3>
+			<p>Los pilotos seleccionados tendrán acceso a:</p>
+			<ul>
+				<li>Entrenamientos en simuladores profesionales de última generación en nuestra sede central.</li>
+				<li>Asesoramiento físico, médico y psicológico deportivo personalizado.</li>
+				<li>Beca financiera para cubrir el coste de la tasa de obtención de la licencia de piloto SAMF ($7,500 - Art. 15.3).</li>
+				<li>Prácticas directas en pistas homologadas bajo la supervisión de inspectores de carrera experimentados.</li>
+			</ul>
+			
+			<h3>Requisitos de Admisión</h3>
+			<p>Para poder optar al programa, los candidatos deberán poseer una identificación de ciudadano válida (citizenid), un certificado médico de aptitud firmado por un facultativo del estado y no contar con sanciones graves del Comité de Disciplina de la federación en los últimos 24 meses.</p>
+			
+			<p>Las solicitudes y pruebas de selección se gestionarán a través de las oficinas de desarrollo de la SAMF.</p>
+		`,
+		image: '/images/news_talents.png',
+		category: 'Comunicado',
+		createdAt: new Date('2025-06-03T11:30:00Z')
+	},
+	{
+		id: 'seguridad-circuito',
+		title: 'Nuevos estándares de seguridad en circuito',
+		description: 'El Comité Técnico de Seguridad de la SAMF anuncia la actualización obligatoria del equipamiento de barreras y escapatorias.',
+		content: `
+			<p>En concordancia con el Artículo 6.7 de la Ley de Competición, que exige una auditoría anual de seguridad de todos los circuitos, el Comité de Seguridad de la SAMF ha emitido una directiva técnica urgente sobre los estándares de protección perimetral.</p>
+			
+			<h3>Mejoras Obligatorias en Trazados Homologados</h3>
+			<p>Todas las pistas que alberguen eventos de la Liga Estatal (LSA) deberán adaptar sus instalaciones antes del inicio del campeonato:</p>
+			<ul>
+				<li><strong>Barreras Tecpro:</strong> Instalación obligatoria en zonas de alta velocidad y curvas de radio cerrado con escapatoria reducida.</li>
+				<li><strong>Áreas de Retención de Grava:</strong> Renovación y arado de las camas de grava para optimizar la desaceleración segura de los vehículos fuera de pista.</li>
+				<li><strong>Puestos de Comisarios:</strong> Refuerzo estructural con blindaje de seguridad para proteger al personal de pista y banderistas.</li>
+			</ul>
+			
+			<p>Los inspectores de la SAMF realizarán auditorías físicas en cada trazado de manera previa al otorgamiento de la licencia del circuito para la temporada actual.</p>
+		`,
+		image: '/images/news_safety.png',
+		category: 'Seguridad',
+		createdAt: new Date('2025-06-05T14:15:00Z')
+	}
+]
+
+if (!article) {
+	article = fallbackNewsList.find(n => n.id === id)
+	recentNews = fallbackNewsList.filter(n => n.id !== id).slice(0, 3)
+}
+
+if (!article) {
+	// If still not found anywhere, redirect to list
+	return Astro.redirect('/news')
+}
+---
+
+<Layout title={`${article.title} | SAMF`} description={article.description || 'Noticias oficiales de la federación.'} image={article.image}>
+	<!-- Header Background Banner (Blured Image overlay) -->
+	<div class="relative w-full h-[320px] md:h-[400px] overflow-hidden flex items-end">
+		<div class="absolute inset-0 bg-cover bg-center filter blur-md scale-105 opacity-20" style={`background-image: url(${article.image});`}></div>
+		<div class="absolute inset-0 bg-gradient-to-t from-slate-black via-slate-black/60 to-transparent"></div>
+		
+		<!-- Banner Content -->
+		<div class="max-w-[960px] mx-auto w-full px-4 md:px-8 pb-8 relative z-10">
+			<!-- Meta badge -->
+			<div class="flex items-center gap-3 mb-4 text-xs font-mono tracking-widest uppercase">
+				<span class="bg-brand-red/15 text-brand-red border border-brand-red/35 px-2.5 py-0.5 rounded font-racing font-bold">
+					{article.category}
+				</span>
+				<span class="text-text-muted">
+					• {new Date(article.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+				</span>
+			</div>
+			
+			<!-- Title -->
+			<h1 class="text-2xl md:text-4xl font-extrabold uppercase tracking-wide leading-tight font-racing text-white text-shadow-md">
+				{article.title}
+			</h1>
+		</div>
+	</div>
+
+	<!-- Main Body Layout -->
+	<div class="max-w-[960px] mx-auto px-4 md:px-8 py-10 flex flex-col gap-10">
+		<!-- Back Button -->
+		<div class="flex">
+			<a 
+				href="/news" 
+				class="inline-flex items-center gap-2 text-xs font-racing font-bold text-text-muted hover:text-brand-red uppercase tracking-wider transition-colors"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+				</svg>
+				<span>Volver a Noticias</span>
+			</a>
+		</div>
+
+		<!-- Article Content Card -->
+		<Card class="p-6 md:p-10 border-slate-border/50">
+			<div class="aspect-[16/9] w-full rounded-xl overflow-hidden mb-8 border border-slate-border/30">
+				<img 
+					src={article.image} 
+					alt={article.title} 
+					class="w-full h-full object-cover" 
+				/>
+			</div>
+
+			<!-- Rich Content Section -->
+			<div class="article-rich-text text-sm md:text-base text-text-secondary leading-relaxed space-y-6">
+				<div set:html={article.content} />
+			</div>
+		</Card>
+
+		<!-- Related News Grid -->
+		{recentNews.length > 0 && (
+			<div class="border-t border-slate-border/40 pt-12 mt-6">
+				<div class="flex items-center gap-3 mb-6">
+					<span class="w-5 h-[2px] bg-brand-red rounded-sm"></span>
+					<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Otras publicaciones recientes</h2>
+				</div>
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					{recentNews.map((news) => (
+						<NewsCard 
+							title={news.title}
+							image={news.image}
+							category={news.category}
+							href={news.id ? `/news/${news.id}` : news.href}
+							isMain={false}
+						/>
+					))}
+				</div>
+			</div>
+		)}
+	</div>
+</Layout>
+
+<style is:global>
+	/* Article typography styling overrides */
+	.article-rich-text h3 {
+		font-family: var(--font-montserrat);
+		color: #ffffff;
+		font-size: 1.25rem;
+		font-weight: 700;
+		margin-top: 2rem;
+		margin-bottom: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
+		border-left: 3px solid var(--color-brand-red);
+		padding-left: 0.75rem;
+	}
+	.article-rich-text p {
+		margin-bottom: 1.25rem;
+		color: var(--color-text-secondary);
+		line-height: 1.7;
+	}
+	.article-rich-text ul {
+		list-style-type: none;
+		margin-bottom: 1.5rem;
+		padding-left: 0.5rem;
+		display: flex;
+		flex-col: column;
+		gap: 0.5rem;
+	}
+	.article-rich-text li {
+		position: relative;
+		padding-left: 1.5rem;
+		margin-bottom: 0.5rem;
+		line-height: 1.6;
+	}
+	.article-rich-text li::before {
+		content: "•";
+		color: var(--color-brand-red);
+		font-weight: bold;
+		display: inline-block;
+		width: 1rem;
+		margin-left: -1rem;
+		position: absolute;
+		left: 0.5rem;
+		font-size: 1.1rem;
+	}
+	.article-rich-text strong {
+		color: #ffffff;
+		font-weight: 600;
+	}
+</style>

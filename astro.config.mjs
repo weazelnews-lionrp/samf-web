@@ -3,12 +3,11 @@ import { defineConfig, fontProviders } from 'astro/config'
 import tailwindcss from '@tailwindcss/vite'
 import vercel from '@astrojs/vercel'
 import sitemap from '@astrojs/sitemap'
-import auth from 'auth-astro'
 
 // https://astro.build/config
 export default defineConfig({
 	prefetch: true,
-	site: 'https://samf.lioncommunity.es',
+	site: import.meta.env.BETTER_AUTH_BASE_URL ?? 'https://samf.lioncommunity.es',
 	devToolbar: {
 		enabled: false,
 	},
@@ -17,12 +16,12 @@ export default defineConfig({
 	},
 	output: 'server',
 	adapter: vercel(),
-	integrations: [sitemap(), auth()],
+	integrations: [sitemap()],
 	fonts: [
 		{
 			provider: fontProviders.google(),
-			name: 'Bebas Neue',
-			cssVariable: '--font-bebas-neue',
+			name: 'Montserrat',
+			cssVariable: '--font-montserrat',
 		},
 	],
 })

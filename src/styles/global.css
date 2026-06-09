@@ -18,7 +18,7 @@
 	--color-text-muted: #94a3b8; /* Slate-gray text */
 	--color-text-secondary: #cbd5e1;
 
-	--font-racing: var(--font-bebas-neue);
+	--font-racing: var(--font-montserrat);
 }
 
 @layer base {
@@ -35,7 +35,8 @@
 	h4,
 	h5,
 	h6 {
-		font-family: var(--font-bebas-neue);
-		letter-spacing: 0.08em;
+		font-family: var(--font-montserrat);
+		font-weight: 800;
+		letter-spacing: 0.03em;
 	}
 }

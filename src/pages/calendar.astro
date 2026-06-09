@@ -1,0 +1,141 @@
+---
+import Layout from '@layouts/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import StatusBadge from '@/components/ui/StatusBadge.astro'
+
+// Fetch calendar events
+const apiUrl = new URL('/api/calendar', Astro.url)
+let events = []
+try {
+	const res = await fetch(apiUrl)
+	const data = await res.json()
+	if (data.success) {
+		events = data.events
+	}
+} catch (err) {
+	console.error('Error fetching calendar:', err)
+}
+
+// Separate upcoming and completed
+const upcoming = events.filter(e => e.status !== 'COMPLETED')
+const completed = events.filter(e => e.status === 'COMPLETED')
+---
+
+<Layout title="Calendario Oficial | SAMF" description="Calendario oficial y circuitos de los Grandes Premios de la Liga San Andreas (LSA).">
+	<div class="max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+		<!-- Page Header -->
+		<div class="mb-10">
+			<div class="flex items-center gap-3 mb-2">
+				<span class="w-8 h-[3px] bg-brand-red rounded-sm"></span>
+				<h1 class="text-3xl font-extrabold uppercase tracking-wider font-racing text-white">Calendario Oficial</h1>
+			</div>
+			<p class="text-sm text-text-muted max-w-xl">
+				Fechas, ubicaciones y trazados homologados para la temporada oficial de la Liga San Andreas (LSA) (Art. 20 y 21).
+			</p>
+		</div>
+
+		<!-- Upcoming GPs -->
+		<div class="flex items-center gap-3 mb-6">
+			<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+			<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Próximos Eventos</h2>
+		</div>
+
+		{upcoming.length === 0 ? (
+			<Card class="text-center py-10 text-text-muted text-sm mb-12">
+				No hay eventos programados en el calendario actualmente.
+			</Card>
+		) : (
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+				{upcoming.map((gp: any) => (
+					<Card glow={gp.status === 'ACTIVE'} class="flex flex-col md:flex-row gap-6">
+						<!-- Circuit Map Thumbnail -->
+						{gp.circuit?.mapUrl ? (
+							<img 
+								src={gp.circuit.mapUrl} 
+								alt={`Mapa de ${gp.circuit.name}`} 
+								class="w-full md:w-40 h-40 rounded-lg object-cover border border-slate-border/60 bg-slate-black/50"
+							/>
+						) : (
+							<div class="w-full md:w-40 h-40 rounded-lg bg-slate-gray/30 border border-slate-border/50 flex flex-col items-center justify-center text-text-muted text-xs p-4 text-center">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map mb-2 opacity-50"><path d="M14.106 5.553a2 2 0 0 0-1.788 0l-3.659 1.83a1 1 0 0 1-.894 0L4.106 5.553a2 2 0 0 0-2.682 2.236v10.53a2 2 0 0 0 1.788 1.553l3.659-1.83a1 1 0 0 1 .894 0l3.659 1.83a2 2 0 0 0 1.788 0l3.659-1.83a1 1 0 0 1 .894 0l3.659 1.83a2 2 0 0 0 2.682-2.236V7.789a2 2 0 0 0-1.788-1.553l-3.659 1.83z"/><line x1="8" x2="8" y1="7" y2="17"/><line x1="16" x2="16" y1="7" y2="17"/></svg>
+								Sin mapa disponible
+							</div>
+						)}
+
+						<!-- GP Info -->
+						<div class="flex-1 flex flex-col justify-between">
+							<div>
+								<div class="flex items-start justify-between gap-3 mb-2">
+									<h3 class="text-lg font-bold text-white font-racing leading-tight">{gp.name}</h3>
+									<StatusBadge status={gp.status} />
+								</div>
+								
+								<p class="text-xs text-text-muted mb-4">
+									Pista: <span class="text-white font-medium">{gp.circuit?.name || 'Por definir'}</span> ({gp.circuit?.location || 'San Andreas'})
+								</p>
+
+								<!-- Technical Details -->
+								<div class="grid grid-cols-2 gap-3 text-[10px] text-text-muted uppercase tracking-wider mb-4">
+									<div class="bg-slate-black/30 border border-slate-border/50 rounded px-2.5 py-1.5">
+										<span class="block text-[8px] text-text-muted">Longitud</span>
+										<span class="font-extrabold text-white text-xs">{gp.circuit?.length || 0} m</span>
+									</div>
+									<div class="bg-slate-black/30 border border-slate-border/50 rounded px-2.5 py-1.5">
+										<span class="block text-[8px] text-text-muted">Curvas</span>
+										<span class="font-extrabold text-white text-xs">{gp.circuit?.turnsCount || 0}</span>
+									</div>
+								</div>
+							</div>
+
+							<!-- Dates -->
+							<div class="border-t border-slate-border/40 pt-3 flex justify-between items-center text-xs">
+								<span class="text-text-muted font-mono">
+									{new Date(gp.startDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} - {new Date(gp.endDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+								</span>
+								{gp.status === 'ACTIVE' && (
+									<span class="text-brand-red font-bold animate-pulse text-[10px] uppercase font-racing tracking-wider">¡EN CURSO!</span>
+								)}
+							</div>
+						</div>
+					</Card>
+				))}
+			</div>
+		)}
+
+		<!-- Completed GPs -->
+		<div class="flex items-center gap-3 mb-6">
+			<span class="w-4 h-[2px] bg-brand-red rounded-sm"></span>
+			<h2 class="text-xl font-bold uppercase tracking-wider font-racing text-white">Eventos Finalizados</h2>
+		</div>
+
+		{completed.length === 0 ? (
+			<Card class="text-center py-8 text-text-muted text-sm">
+				No hay eventos finalizados en esta temporada todavía.
+			</Card>
+		) : (
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				{completed.map((gp: any) => (
+					<Card hoverable class="flex flex-col justify-between">
+						<div>
+							<div class="flex justify-between items-start mb-3">
+								<h3 class="text-sm font-bold text-white font-racing leading-tight">{gp.name}</h3>
+								<StatusBadge status={gp.status} class="text-[8px]" />
+							</div>
+							<p class="text-[11px] text-text-muted mb-4 leading-normal">
+								Circuito: {gp.circuit?.name || 'Definido'}<br/>
+								Fecha: {new Date(gp.endDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+							</p>
+						</div>
+
+						<div class="border-t border-slate-border/50 pt-4 mt-2">
+							<Button href={`/results/${gp.id}`} variant="outline" size="sm" class="w-full text-center">
+								Ver Resultados
+							</Button>
+						</div>
+					</Card>
+				))}
+			</div>
+		)}
+	</div>
+</Layout>
